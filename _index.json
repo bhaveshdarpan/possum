@@ -1,0 +1,14 @@
+{
+  "version": 2,
+  "entries": {
+    "docs/prd/sync-smoke-test.md": {
+      "providers": {
+        "google-drive": {
+          "fileId": "1BTqo5BrjnYZIZccIblpa25aMNLy6SQukyetS8DJhkAY",
+          "url": "https://docs.google.com/document/d/1BTqo5BrjnYZIZccIblpa25aMNLy6SQukyetS8DJhkAY/edit?usp=drivesdk",
+          "lastSyncedHash": "sha256:859cf1d31b87f42903f9f7c82d22ef2a4d922b16881eb212532470374ea02d72"
+        }
+      }
+    }
+  }
+}

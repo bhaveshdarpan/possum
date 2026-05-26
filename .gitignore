@@ -141,3 +141,18 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# --- docs-sync project ---
+
+# Service account credentials — never commit
+service-account*.json
+*-credentials.json
+credentials/
+
+# Local docx artifacts (we don't write any, but block them by convention)
+*.docx
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
