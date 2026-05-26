@@ -21,7 +21,7 @@ Each Markdown file should start with YAML frontmatter:
 ---
 title: Feature X PRD
 owner: jane@example.com
-status: draft   # draft | review | approved | archived
+status: draft # draft | review | approved | archived
 ---
 ```
 
@@ -52,7 +52,7 @@ The Docs API is **not** required for v1 — we upload `.docx` and let Drive auto
 
 1. **APIs & Services → Credentials → Create credentials → Service account.**
 2. Give it a name (e.g. `docs-sync`) and click **Create and continue**.
-3. **Grant access to project**: leave both *Select a role* and *Principals with access* blank — Drive access is controlled by folder sharing, not GCP IAM. Click **Continue**, then **Done**.
+3. **Grant access to project**: leave both _Select a role_ and _Principals with access_ blank — Drive access is controlled by folder sharing, not GCP IAM. Click **Continue**, then **Done**.
 4. Open the new service account, go to the **Keys** tab, **Add key → Create new key → JSON**. A `.json` file downloads.
 5. Move the key file somewhere stable and outside the repo, e.g. `~/.config/docs-sync/service-account.json`. **Never commit it.** (The repo's `.gitignore` already blocks `service-account*.json` and `*-credentials.json`, but keeping the key out of the working tree entirely is safer.)
 6. Note the service account email — it looks like `docs-sync@<project-id>.iam.gserviceaccount.com`. You'll paste it into Drive in the next step.
@@ -88,7 +88,7 @@ DRIVE_ROOT_FOLDER_ID=<folder ID from step 3>
 ORG_DOMAIN=example.com
 ```
 
-`ORG_DOMAIN` is the Workspace domain that gets commenter access on every new Doc. If you're testing with a personal `@gmail.com` account, `type: domain` permission grants won't work — see *Personal account testing* at the bottom.
+`ORG_DOMAIN` is the Workspace domain that gets commenter access on every new Doc. If you're testing with a personal `@gmail.com` account, `type: domain` permission grants won't work — see _Personal account testing_ at the bottom.
 
 ### 5. Verify the setup
 

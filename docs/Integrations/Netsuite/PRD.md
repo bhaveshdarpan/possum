@@ -102,23 +102,25 @@ like:
 {
   "country": "US",
   "region": "CA",
-  "taxCode": "PS081282",     // Avalara PRODUCT category — IGNORED for mapping
+  "taxCode": "PS081282", // Avalara PRODUCT category — IGNORED for mapping
   "tax": 62.5,
   "taxableAmount": 1000,
-  "details": [{
-    "country": "US",
-    "region": "CA",
-    "stateFIPS": "06",
-    "jurisCode": "06",
-    "jurisName": "CALIFORNIA",
-    "jurisType": "STA",
-    "rate": 0.0625,           // 6.25%
-    "tax": 62.5,
-    "taxableAmount": 1000,
-    "taxType": "Sales",
-    "taxName": "CA STATE TAX",
-    "jurisdictionId": 5000531
-  }]
+  "details": [
+    {
+      "country": "US",
+      "region": "CA",
+      "stateFIPS": "06",
+      "jurisCode": "06",
+      "jurisName": "CALIFORNIA",
+      "jurisType": "STA",
+      "rate": 0.0625, // 6.25%
+      "tax": 62.5,
+      "taxableAmount": 1000,
+      "taxType": "Sales",
+      "taxName": "CA STATE TAX",
+      "jurisdictionId": 5000531
+    }
+  ]
 }
 ```
 
@@ -304,12 +306,12 @@ The new connector tax config shape:
 
 ```yaml
 tax:
-  provider: "avalara"          # avalara | taxjar | anrok | stripe_tax | manual
-  
+  provider: "avalara" # avalara | taxjar | anrok | stripe_tax | manual
+
   nexus_mappings:
-    - country: "US"            # ISO-3166-1 alpha-2
-      region: "CA"             # postal code (US/CA states); null for country-wide
-      tax_type: "SALES"        # canonical Zenskar vocabulary
+    - country: "US" # ISO-3166-1 alpha-2
+      region: "CA" # postal code (US/CA states); null for country-wide
+      tax_type: "SALES" # canonical Zenskar vocabulary
       netsuite:
         nexus_id: "12"
         subsidiary_id: "1"
@@ -364,16 +366,16 @@ a customer migrating from Avalara to Anrok keeps the same
 
 ### 4.3 What gets auto-created — the locked scope
 
-| Record | Who creates? | Why |
-|---|---|---|
-| `Subsidiary` | Customer | Org-structure decision |
-| `Nexus` | Customer | Tax-registration decision (legal) |
-| `Tax Control Account` (GL) | Customer | Chart-of-accounts decision |
-| `TaxAgency` (Vendor) | **Customer** | Per-tenant naming; auto-creating placeholders breaks NetSuite tax reports |
-| `TaxType` | **Customer** | Per-tenant GL-account choices |
-| `SalesTaxItem` | **Zenskar** | Auto-create on demand |
-| `TaxGroup` | **Zenskar** | Auto-create on demand for multi-jurisdiction |
-| Feature flags | Customer | NetSuite admin task |
+| Record                     | Who creates? | Why                                                                       |
+| -------------------------- | ------------ | ------------------------------------------------------------------------- |
+| `Subsidiary`               | Customer     | Org-structure decision                                                    |
+| `Nexus`                    | Customer     | Tax-registration decision (legal)                                         |
+| `Tax Control Account` (GL) | Customer     | Chart-of-accounts decision                                                |
+| `TaxAgency` (Vendor)       | **Customer** | Per-tenant naming; auto-creating placeholders breaks NetSuite tax reports |
+| `TaxType`                  | **Customer** | Per-tenant GL-account choices                                             |
+| `SalesTaxItem`             | **Zenskar**  | Auto-create on demand                                                     |
+| `TaxGroup`                 | **Zenskar**  | Auto-create on demand for multi-jurisdiction                              |
+| Feature flags              | Customer     | NetSuite admin task                                                       |
 
 The customer's one-time setup is to pre-create the `TaxAgency`
 vendor per nexus they're registered in (typically 5–15 vendors for
@@ -386,11 +388,11 @@ discoverable by name match (so re-syncs are idempotent) and makes
 rate changes produce new records (so historical audit trail is
 preserved).
 
-| Record | Name pattern | Example | Uniqueness check |
-|---|---|---|---|
-| `SalesTaxItem` (multi-jurisdiction component) | `ZN_<country>_<region>_<juris_type>_<juris_code>_<rate_4dp>` | `ZN_US_CA_STA_06_6.2500` | Exact `itemId` match against the refresh cache built at sync start (§4.5); on SOAP `add`, `DUP_RCRD` triggers re-fetch by name and adoption. Subsidiary scope is implicit — `itemId` is unique within a subsidiary in NetSuite. |
-| `SalesTaxItem` (country-wide single-rate) | `ZN_<country>_<tax_type>_<rate_4dp>` | `ZN_GB_VAT_20.0000` | Exact `itemId` match against the refresh cache; on SOAP `add`, `DUP_RCRD` triggers re-fetch by name and adoption. Subsidiary scope is implicit. |
-| `TaxGroup` | `ZN_GRP_<country>_<region>_<16_char_hash>` | `ZN_GRP_US_CA_a1b2c3d4e5f6g7h8` | Exact `itemId` match against the refresh cache. The 16-char hash encodes the full `(juris_code, juris_type, rate_4dp)` composition sorted canonically, so a name match implies a composition match by construction. Hash collision probability ≈ 2⁻⁶⁴, treated as zero. On SOAP `add`, `DUP_RCRD` triggers re-fetch and adoption. |
+| Record                                        | Name pattern                                                 | Example                         | Uniqueness check                                                                                                                                                                                                                                                                                                                  |
+| --------------------------------------------- | ------------------------------------------------------------ | ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SalesTaxItem` (multi-jurisdiction component) | `ZN_<country>_<region>_<juris_type>_<juris_code>_<rate_4dp>` | `ZN_US_CA_STA_06_6.2500`        | Exact `itemId` match against the refresh cache built at sync start (§4.5); on SOAP `add`, `DUP_RCRD` triggers re-fetch by name and adoption. Subsidiary scope is implicit — `itemId` is unique within a subsidiary in NetSuite.                                                                                                   |
+| `SalesTaxItem` (country-wide single-rate)     | `ZN_<country>_<tax_type>_<rate_4dp>`                         | `ZN_GB_VAT_20.0000`             | Exact `itemId` match against the refresh cache; on SOAP `add`, `DUP_RCRD` triggers re-fetch by name and adoption. Subsidiary scope is implicit.                                                                                                                                                                                   |
+| `TaxGroup`                                    | `ZN_GRP_<country>_<region>_<16_char_hash>`                   | `ZN_GRP_US_CA_a1b2c3d4e5f6g7h8` | Exact `itemId` match against the refresh cache. The 16-char hash encodes the full `(juris_code, juris_type, rate_4dp)` composition sorted canonically, so a name match implies a composition match by construction. Hash collision probability ≈ 2⁻⁶⁴, treated as zero. On SOAP `add`, `DUP_RCRD` triggers re-fetch and adoption. |
 
 **Rate format**: 4 decimal places, leading zero before the decimal
 (e.g. `0.2500`, never `.2500`). Provider rates are normalized to
@@ -417,7 +419,7 @@ how single-jurisdiction and multi-jurisdiction lines are resolved
 inside Phase 3.
 
 > **Rendering note**: these diagrams use Mermaid syntax. To render in
-> Google Docs: install the *Mermaid Chart* add-on (Extensions →
+> Google Docs: install the _Mermaid Chart_ add-on (Extensions →
 > Add-ons → Get add-ons), or paste each diagram block into
 > [mermaid.live](https://mermaid.live) and export as PNG to embed.
 
@@ -581,21 +583,21 @@ recovery rate > 50% of creates.
 Every mapping or creation failure is a typed error with an
 actionable customer-facing message. **No silent fallbacks**:
 
-| Code | Trigger | Customer action |
-|---|---|---|
-| `NEXUS_MAPPING_MISSING` | No row in `nexus_mappings` for one or more `(country, region, tax_type)` tuples in the invoice | Add the listed mapping rows under Connector → Tax Settings → Nexus Mappings. Confirm the NetSuite Nexus, TaxType, and TaxAgency vendor exist first. Error payload includes the full list of missing tuples. |
-| `NEXUS_MAPPING_INVALID` | Mapping row exists but the NetSuite IDs it references are missing or inactive | "Mapping for `(US, CA, SALES)` points at NetSuite TaxAgency id `8765`, which is missing or inactive. Update the mapping or restore the record." |
-| `TAX_GROUPS_FEATURE_DISABLED` | Invoice is multi-jurisdiction but NetSuite's Tax Groups feature is off | "Enable Tax Groups in NetSuite at Setup → Accounting → Taxes → Set Up Taxes." |
-| `SUBSIDIARY_PERMISSION_DENIED` | SOAP role lacks Create permission on `SalesTaxItem` or `TaxGroup` | "Grant the integration role the Lists → Tax Items → Create permission." |
-| `AUTO_CREATE_FAILED` | Any non-`DUP_RCRD` SOAP error during create | Surfaced with raw NetSuite error in `details`. |
+| Code                           | Trigger                                                                                        | Customer action                                                                                                                                                                                             |
+| ------------------------------ | ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `NEXUS_MAPPING_MISSING`        | No row in `nexus_mappings` for one or more `(country, region, tax_type)` tuples in the invoice | Add the listed mapping rows under Connector → Tax Settings → Nexus Mappings. Confirm the NetSuite Nexus, TaxType, and TaxAgency vendor exist first. Error payload includes the full list of missing tuples. |
+| `NEXUS_MAPPING_INVALID`        | Mapping row exists but the NetSuite IDs it references are missing or inactive                  | "Mapping for `(US, CA, SALES)` points at NetSuite TaxAgency id `8765`, which is missing or inactive. Update the mapping or restore the record."                                                             |
+| `TAX_GROUPS_FEATURE_DISABLED`  | Invoice is multi-jurisdiction but NetSuite's Tax Groups feature is off                         | "Enable Tax Groups in NetSuite at Setup → Accounting → Taxes → Set Up Taxes."                                                                                                                               |
+| `SUBSIDIARY_PERMISSION_DENIED` | SOAP role lacks Create permission on `SalesTaxItem` or `TaxGroup`                              | "Grant the integration role the Lists → Tax Items → Create permission."                                                                                                                                     |
+| `AUTO_CREATE_FAILED`           | Any non-`DUP_RCRD` SOAP error during create                                                    | Surfaced with raw NetSuite error in `details`.                                                                                                                                                              |
 
 Existing codes preserved from the manual flow:
 
-| Code | Reused for |
-|---|---|
-| `INACTIVE_TAX_CODE` | Cache hit but `status != ACTIVE` |
-| `RATE_MISMATCH` | Cache hit but rate diverges (applies post-creation too) |
-| `TAX_GATEWAY_ERROR` | SuiteQL / SOAP transport failure |
+| Code                       | Reused for                                                        |
+| -------------------------- | ----------------------------------------------------------------- |
+| `INACTIVE_TAX_CODE`        | Cache hit but `status != ACTIVE`                                  |
+| `RATE_MISMATCH`            | Cache hit but rate diverges (applies post-creation too)           |
+| `TAX_GATEWAY_ERROR`        | SuiteQL / SOAP transport failure                                  |
 | `COMBINED_TAX_UNSUPPORTED` | Per-line + top-level mix with distinct codes (existing semantics) |
 
 **Aggregated error shape** for `NEXUS_MAPPING_MISSING`:
@@ -606,9 +608,9 @@ Existing codes preserved from the manual flow:
   "message": "3 jurisdictions have no NetSuite mapping configured",
   "details": {
     "missing_mappings": [
-      {"country": "US", "region": "NV", "tax_type": "SALES"},
-      {"country": "US", "region": "OR", "tax_type": "SALES"},
-      {"country": "CA", "region": "ON", "tax_type": "HST"}
+      { "country": "US", "region": "NV", "tax_type": "SALES" },
+      { "country": "US", "region": "OR", "tax_type": "SALES" },
+      { "country": "CA", "region": "ON", "tax_type": "HST" }
     ],
     "invoice_id": "INV-12345",
     "provider": "avalara",
@@ -728,12 +730,12 @@ Every auto-create logs structured records:
 Persisted via the existing `ConnectorResponse` audit trail. SignOz
 alerts:
 
-| Alert | Threshold | Action |
-|---|---|---|
-| `netsuite_tax_auto_create_failure_rate` | > 2% over 15 min | Investigate — likely mass mapping misconfig |
-| `netsuite_tax_auto_create_duplicate_recovery` | > 50% of creates | Concurrency pressure; consider per-connector lock |
-| `netsuite_tax_rate_mismatch_rate` | > 5% over 1 hour | Likely provider rate update; review tolerance |
-| `netsuite_tax_nexus_mapping_missing` | > 0 events for new tenants past 7 days | Onboarding incomplete |
+| Alert                                         | Threshold                              | Action                                            |
+| --------------------------------------------- | -------------------------------------- | ------------------------------------------------- |
+| `netsuite_tax_auto_create_failure_rate`       | > 2% over 15 min                       | Investigate — likely mass mapping misconfig       |
+| `netsuite_tax_auto_create_duplicate_recovery` | > 50% of creates                       | Concurrency pressure; consider per-connector lock |
+| `netsuite_tax_rate_mismatch_rate`             | > 5% over 1 hour                       | Likely provider rate update; review tolerance     |
+| `netsuite_tax_nexus_mapping_missing`          | > 0 events for new tenants past 7 days | Onboarding incomplete                             |
 
 Every error code in §4.8 emits a metric so the dashboard renders
 mapping gaps in real time.
@@ -772,13 +774,13 @@ Both single-jurisdiction and multi-jurisdiction auto-create are
 **in scope from day one**. Phasing is by feature surface, not by
 jurisdiction shape, so the entire flow ships together.
 
-| Phase | Scope | Risk | Behaviour change |
-|---|---|---|---|
-| P0 | Provider-neutral mapping schema + canonical vocab + provider adapter Protocol + FE wireframes | Low | None — schema only |
-| P1 | Provider selector + nexus mapping table CRUD + "Detect from Avalara" + Avalara adapter | Medium | Opted-in tenants can configure mappings but auto-create is gated |
-| P2 | Auto-create flow (SalesTaxItem + TaxGroup) + strict error surface + DUP_RCRD recovery + cache mutation | High | Opted-in tenants stop seeing `TAX_CODE_MISSING` on first-invoice-in-jurisdiction; previously-blocked invoices succeed |
-| P3 | Aggregated error reporting + frontend recovery UX + audit dashboards + SignOz alerts | Low | Better customer recovery experience |
-| P4 | Additional provider adapters (TaxJar, Anrok, Stripe Tax) as customer demand emerges | Low | New provider connectors gain auto-create support without core changes |
+| Phase | Scope                                                                                                  | Risk   | Behaviour change                                                                                                      |
+| ----- | ------------------------------------------------------------------------------------------------------ | ------ | --------------------------------------------------------------------------------------------------------------------- |
+| P0    | Provider-neutral mapping schema + canonical vocab + provider adapter Protocol + FE wireframes          | Low    | None — schema only                                                                                                    |
+| P1    | Provider selector + nexus mapping table CRUD + "Detect from Avalara" + Avalara adapter                 | Medium | Opted-in tenants can configure mappings but auto-create is gated                                                      |
+| P2    | Auto-create flow (SalesTaxItem + TaxGroup) + strict error surface + DUP_RCRD recovery + cache mutation | High   | Opted-in tenants stop seeing `TAX_CODE_MISSING` on first-invoice-in-jurisdiction; previously-blocked invoices succeed |
+| P3    | Aggregated error reporting + frontend recovery UX + audit dashboards + SignOz alerts                   | Low    | Better customer recovery experience                                                                                   |
+| P4    | Additional provider adapters (TaxJar, Anrok, Stripe Tax) as customer demand emerges                    | Low    | New provider connectors gain auto-create support without core changes                                                 |
 
 Each phase is independently shippable. Phase 0 has no behaviour
 change — safe to ship while P1 is in review. P1 + P2 should ship
@@ -830,18 +832,18 @@ when a customer asks.
 
 ## 8. Risks & Mitigations
 
-| # | Risk | Mitigation |
-|---|---|---|
-| R1 | Customer configures wrong NetSuite TaxAgency vendor → all auto-created items under that nexus reference the wrong agency | Live preview in Add/Edit Mapping screen (§4.9) shows the resolved agency name before save; "Validate now" runs an end-to-end probe |
-| R2 | Concurrent syncs race on duplicate creates | Three-layer defence (§4.7): discovery-before-create, `DUP_RCRD` recovery, append-only in-memory cache |
-| R3 | Provider rate updates produce `SalesTaxItem` proliferation over time | Rate is part of the deterministic name (§4.4); proliferation is intentional to preserve audit trail. Audit dashboard tracks growth per tenant |
-| R4 | SuiteTalk role permissions vary by tenant | Distinct error code `SUBSIDIARY_PERMISSION_DENIED` with clear message; falls back to manual mode with no functional regression |
-| R5 | `TaxGroup` feature off — multi-jurisdiction invoices block | `TAX_GROUPS_FEATURE_DISABLED` directs customer to enable the feature; single-jurisdiction flows unaffected |
-| R6 | Customer's existing manual mapping conflicts with auto-created | Manual mode is the absence of a `provider` selection; the two never co-exist on the same connector. Migration from manual → provider mode is opt-in |
-| R7 | A bad rollout pollutes customer's NetSuite with bad records | Strict mode + deterministic naming caps blast radius at "one bad SalesTaxItem per nexus." Aggregated error surface makes the issue visible immediately |
-| R8 | Customer can't find their NetSuite TaxAgency vendor in the dropdown | Refresh button (↻) on the dropdown after deep-link vendor creation; dropdown re-pulls vendor list on click |
-| R9 | Provider adapter returns inconsistent canonical vocabulary across versions | Provider adapter contract is enforced by Protocol; per-adapter unit tests cover the canonical translation table |
-| R10 | Tax-filing reconciliation: NetSuite tax reports vs provider filings | Customer's NetSuite tax reports stay agency-level-meaningful because customer owns the agencies (§4.3). Filing source of truth is still the provider; document the boundary in customer-facing docs |
+| #   | Risk                                                                                                                     | Mitigation                                                                                                                                                                                          |
+| --- | ------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| R1  | Customer configures wrong NetSuite TaxAgency vendor → all auto-created items under that nexus reference the wrong agency | Live preview in Add/Edit Mapping screen (§4.9) shows the resolved agency name before save; "Validate now" runs an end-to-end probe                                                                  |
+| R2  | Concurrent syncs race on duplicate creates                                                                               | Three-layer defence (§4.7): discovery-before-create, `DUP_RCRD` recovery, append-only in-memory cache                                                                                               |
+| R3  | Provider rate updates produce `SalesTaxItem` proliferation over time                                                     | Rate is part of the deterministic name (§4.4); proliferation is intentional to preserve audit trail. Audit dashboard tracks growth per tenant                                                       |
+| R4  | SuiteTalk role permissions vary by tenant                                                                                | Distinct error code `SUBSIDIARY_PERMISSION_DENIED` with clear message; falls back to manual mode with no functional regression                                                                      |
+| R5  | `TaxGroup` feature off — multi-jurisdiction invoices block                                                               | `TAX_GROUPS_FEATURE_DISABLED` directs customer to enable the feature; single-jurisdiction flows unaffected                                                                                          |
+| R6  | Customer's existing manual mapping conflicts with auto-created                                                           | Manual mode is the absence of a `provider` selection; the two never co-exist on the same connector. Migration from manual → provider mode is opt-in                                                 |
+| R7  | A bad rollout pollutes customer's NetSuite with bad records                                                              | Strict mode + deterministic naming caps blast radius at "one bad SalesTaxItem per nexus." Aggregated error surface makes the issue visible immediately                                              |
+| R8  | Customer can't find their NetSuite TaxAgency vendor in the dropdown                                                      | Refresh button (↻) on the dropdown after deep-link vendor creation; dropdown re-pulls vendor list on click                                                                                          |
+| R9  | Provider adapter returns inconsistent canonical vocabulary across versions                                               | Provider adapter contract is enforced by Protocol; per-adapter unit tests cover the canonical translation table                                                                                     |
+| R10 | Tax-filing reconciliation: NetSuite tax reports vs provider filings                                                      | Customer's NetSuite tax reports stay agency-level-meaningful because customer owns the agencies (§4.3). Filing source of truth is still the provider; document the boundary in customer-facing docs |
 
 ---
 
@@ -893,22 +895,22 @@ Down to three. The remainder were closed during design review.
 The PRD shape converged through a series of design decisions.
 Recorded here so the trail is visible.
 
-| # | Decision | Rationale |
-|---|---|---|
-| D1 | Auto-create per-jurisdiction `SalesTaxItem` and `TaxGroup` records on demand, with customers owning higher-level tax records | Preserves NetSuite as a financial source of truth — jurisdiction-level breakdown stays visible in NetSuite's native Tax Liability Report. Sentinel-style alternatives that collapse all tax into a single placeholder break the agency-level reporting customers depend on for reconciliation |
-| D2 | Auto-create scope is `SalesTaxItem` + `TaxGroup` only | Higher-level records (agencies, types, nexuses) are per-tenant named, license-tier-gated, and reference real-world tax-registration decisions. Auto-creating a placeholder "Zenskar Tax Agency" breaks NetSuite's native agency-level tax reports |
-| D3 | Provider-neutral mapping schema with canonical vocabulary | Forward-compatible with TaxJar / Anrok / Stripe Tax / future providers; mapping rows stay stable across provider switches |
-| D4 | `region` = postal code (US/CA states), `null` for country-wide | Postal code is the customer-recognizable key; the user configuring the mapping doesn't need to know about Avalara's `juris_code` or NetSuite's nexus IDs |
-| D5 | Strict mode: no escape hatch, no fallback | Silent failures are the root pain in the current shipped flow; strict semantics surface gaps immediately with actionable errors |
-| D6 | Five new typed error codes, distinguishing mapping-row-missing vs IDs-stale vs feature-off vs permission-denied vs create-failed | Each has a different customer remediation path; one umbrella error code would force the customer to guess |
-| D7 | Naming convention is the natural key for `DUP_RCRD` idempotency | NetSuite has no upsert-by-natural-key affordance; the deterministic name is the only durable handle |
-| D8 | Never mutate existing NetSuite records — rate changes produce new ones | Mutation affects in-flight and historical transactions referencing the same record; new-record-per-rate-change preserves audit trail at the cost of monotonic record growth (acceptable trade-off) |
-| D9 | Frontend: suggest-on-demand for provider discovery | Manual mode is first-class; auto-populating from a provider when manual is selected is wrong |
-| D10 | Frontend: deep-link to NetSuite for `TaxAgency` vendor creation | Customer owns the agency record; preserves "no Zenskar-polluted records in your NetSuite" guarantee |
-| D11 | Frontend: aggregated error reporting — show all missing mappings in one error | Multi-jurisdiction invoices can fail on multiple jurisdictions simultaneously; fix-one-retry-fix-next is worse UX than fix-all-then-resync |
-| D12 | Manual resync only in v1; auto-retry deferred | Auto-retry needs a background queue + feedback loop we're not signing up for at launch. Adds production-incident surface area |
-| D13 | Single-jurisdiction and multi-jurisdiction in scope from day one | No technical reason to phase by jurisdiction shape; the resolver handles both. Phasing is by feature surface (P0–P3) instead |
-| D14 | Per-connector concurrency lock deferred | `DUP_RCRD` recovery is correct under concurrent load; per-connector lock adds complexity without clear demand. Reconsider if recovery rate > 50% in production |
+| #   | Decision                                                                                                                         | Rationale                                                                                                                                                                                                                                                                                     |
+| --- | -------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D1  | Auto-create per-jurisdiction `SalesTaxItem` and `TaxGroup` records on demand, with customers owning higher-level tax records     | Preserves NetSuite as a financial source of truth — jurisdiction-level breakdown stays visible in NetSuite's native Tax Liability Report. Sentinel-style alternatives that collapse all tax into a single placeholder break the agency-level reporting customers depend on for reconciliation |
+| D2  | Auto-create scope is `SalesTaxItem` + `TaxGroup` only                                                                            | Higher-level records (agencies, types, nexuses) are per-tenant named, license-tier-gated, and reference real-world tax-registration decisions. Auto-creating a placeholder "Zenskar Tax Agency" breaks NetSuite's native agency-level tax reports                                             |
+| D3  | Provider-neutral mapping schema with canonical vocabulary                                                                        | Forward-compatible with TaxJar / Anrok / Stripe Tax / future providers; mapping rows stay stable across provider switches                                                                                                                                                                     |
+| D4  | `region` = postal code (US/CA states), `null` for country-wide                                                                   | Postal code is the customer-recognizable key; the user configuring the mapping doesn't need to know about Avalara's `juris_code` or NetSuite's nexus IDs                                                                                                                                      |
+| D5  | Strict mode: no escape hatch, no fallback                                                                                        | Silent failures are the root pain in the current shipped flow; strict semantics surface gaps immediately with actionable errors                                                                                                                                                               |
+| D6  | Five new typed error codes, distinguishing mapping-row-missing vs IDs-stale vs feature-off vs permission-denied vs create-failed | Each has a different customer remediation path; one umbrella error code would force the customer to guess                                                                                                                                                                                     |
+| D7  | Naming convention is the natural key for `DUP_RCRD` idempotency                                                                  | NetSuite has no upsert-by-natural-key affordance; the deterministic name is the only durable handle                                                                                                                                                                                           |
+| D8  | Never mutate existing NetSuite records — rate changes produce new ones                                                           | Mutation affects in-flight and historical transactions referencing the same record; new-record-per-rate-change preserves audit trail at the cost of monotonic record growth (acceptable trade-off)                                                                                            |
+| D9  | Frontend: suggest-on-demand for provider discovery                                                                               | Manual mode is first-class; auto-populating from a provider when manual is selected is wrong                                                                                                                                                                                                  |
+| D10 | Frontend: deep-link to NetSuite for `TaxAgency` vendor creation                                                                  | Customer owns the agency record; preserves "no Zenskar-polluted records in your NetSuite" guarantee                                                                                                                                                                                           |
+| D11 | Frontend: aggregated error reporting — show all missing mappings in one error                                                    | Multi-jurisdiction invoices can fail on multiple jurisdictions simultaneously; fix-one-retry-fix-next is worse UX than fix-all-then-resync                                                                                                                                                    |
+| D12 | Manual resync only in v1; auto-retry deferred                                                                                    | Auto-retry needs a background queue + feedback loop we're not signing up for at launch. Adds production-incident surface area                                                                                                                                                                 |
+| D13 | Single-jurisdiction and multi-jurisdiction in scope from day one                                                                 | No technical reason to phase by jurisdiction shape; the resolver handles both. Phasing is by feature surface (P0–P3) instead                                                                                                                                                                  |
+| D14 | Per-connector concurrency lock deferred                                                                                          | `DUP_RCRD` recovery is correct under concurrent load; per-connector lock adds complexity without clear demand. Reconsider if recovery rate > 50% in production                                                                                                                                |
 
 ---
 

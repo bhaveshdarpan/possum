@@ -8,12 +8,12 @@
     "push": "tsx scripts/push.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "lint:md": "markdownlint-cli2",
-    "lint:md:fix": "markdownlint-cli2 --fix",
+    "format": "prettier --write \"docs/**/*.md\" \"README.md\"",
+    "format:check": "prettier --check \"docs/**/*.md\" \"README.md\"",
     "prepare": "husky"
   },
   "lint-staged": {
-    "*.md": "markdownlint-cli2 --fix"
+    "*.md": "prettier --write"
   },
   "engines": {
     "node": ">=22"
@@ -29,7 +29,7 @@
     "@types/node": "^22.10.0",
     "husky": "^9.1.7",
     "lint-staged": "^17.0.5",
-    "markdownlint-cli2": "^0.22.1",
+    "prettier": "^3.4.2",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",
     "vitest": "^2.1.8"

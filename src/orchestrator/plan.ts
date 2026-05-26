@@ -1,6 +1,6 @@
-import { readdir, readFile } from "node:fs/promises";
-import { createHash } from "node:crypto";
-import path from "node:path";
+import { readdir, readFile } from "fs/promises";
+import { createHash } from "crypto";
+import path from "path";
 import matter from "gray-matter";
 import type { IndexFile } from "../index/schema.js";
 
