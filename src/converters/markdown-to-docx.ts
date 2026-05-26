@@ -25,6 +25,13 @@ const docxOptions: Options = {
     inlineCodeBackground: "f6f8fa",
     tableLayout: "autofit",
   },
+  imageHandling: {
+    remote: {
+      enabled: true,
+      allowedHosts: ["mermaid.ink"],
+    },
+    fetchTimeoutMs: 15000,
+  },
   codeHighlighting: {
     enabled: true,
     showLanguageLabel: true,

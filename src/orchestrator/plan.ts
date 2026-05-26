@@ -48,6 +48,16 @@ function hashContent(raw: string): string {
   return "sha256:" + createHash("sha256").update(raw).digest("hex");
 }
 
+function rewriteMermaidBlocks(markdown: string): string {
+  return markdown.replace(
+    /```mermaid\n([\s\S]*?)\n```/g,
+    (_, code: string) => {
+      const encoded = Buffer.from(code.trim(), "utf8").toString("base64url");
+      return `![diagram](https://mermaid.ink/img/${encoded})`;
+    },
+  );
+}
+
 export async function planSync(opts: {
   docsRoot: string;
   repoRoot: string;
@@ -69,7 +79,7 @@ export async function planSync(opts: {
         : "";
     const stem = path.basename(fullPath, ".md");
     const name = fmTitle !== "" ? fmTitle : stem;
-    const body = parsed.content;
+    const body = rewriteMermaidBlocks(parsed.content);
 
     const relUnderDocs = path
       .relative(opts.docsRoot, fullPath)
