@@ -145,7 +145,7 @@ Both records are subsidiary-scoped. Both reference a `TaxAgency`
 Reading bottom-up — every layer must exist before the layer above
 can be created:
 
-```
+```text
 TaxGroup                                       ← auto-created by Zenskar
   ↓ taxItemList[*]
 SalesTaxItem (× N members)                     ← auto-created by Zenskar
@@ -181,6 +181,7 @@ disposition in this PRD is recorded so the design choices are
 traceable back to the problem.
 
 ### C1. Unbounded, hash-derived key space (engine-driven)
+
 Avalara emits a unique key per jurisdiction composition. US tenants
 hit hundreds of unique keys per quarter. **Addressed by**: auto-
 creation under deterministic naming convention (§4.4); first invoice
@@ -188,51 +189,60 @@ in a jurisdiction provisions records, subsequent invoices are cache
 hits.
 
 ### C2. Keys are not human-readable (engine-driven)
+
 `ZN_OAKLAND_US_a1b2c3d4e5f6g7h8` is not a name a tax accountant
 types into NetSuite manually. **Addressed by**: naming is internal-
 only; customer interacts with `(country, region, tax_type)` mapping
 rows (§4.2), not with the underlying tax-item names.
 
 ### C3. `SalesTaxItem.taxAgency` is a foreign reference
+
 Auto-creating items requires resolving the right TaxAgency vendor.
 Agencies are per-tenant named. **Addressed by**: customer owns
 agency provisioning (§4.3); mapping table (§4.2) makes the agency
 ID explicit per nexus. Zenskar never auto-creates agencies.
 
 ### C4. `SalesTaxItem.taxType` is also a foreign reference
+
 TaxType records are nexus-bound and license-tier-gated.
 **Addressed by**: customer owns tax-type provisioning (§4.3); mapping
 table specifies which type to use per nexus.
 
 ### C5. `TaxGroup` composition compounds C3 + C4
+
 Multi-jurisdiction TaxGroup needs N items, each needing agency +
 type. **Addressed by**: customer's mapping table covers all
 relevant nexuses; group creation is mechanical once components
 exist (§4.5).
 
 ### C6. Idempotency without natural keys
+
 NetSuite raises `DUP_RCRD` on name collision; no upsert API.
 **Addressed by**: deterministic naming (§4.4) IS the natural key;
 discovery-before-create + DUP_RCRD recovery (§4.7).
 
 ### C7. Subsidiary context is mandatory
+
 Every record subsidiary-scoped. **Addressed by**: mapping table
 captures subsidiary per nexus; invoice routes to the correct
 mapping via invoice's resolved subsidiary ID.
 
 ### C8. License-tier features
+
 TaxGroup is optional NetSuite feature. **Addressed by**: feature
 detection at refresh time + create time; explicit error
 `TAX_GROUPS_FEATURE_DISABLED` (§4.8) for multi-jurisdiction
 invoices on feature-off tenants.
 
 ### C9. Rate drift between tax engine and NetSuite (engine-driven)
+
 Tax engines update rates as jurisdictions change them. **Addressed
 by**: never-mutate policy (§4.6); rate is part of the deterministic
 name so rate changes produce new records, preserving historical
 audit trail.
 
 ### C10. Historical lock-in (engine-driven severity)
+
 NetSuite blocks deletion of transaction-referenced tax records.
 Bad agency resolution could pollute the account with dozens of bad
 items in one sync. **Addressed by**: customer owns agency mapping;
@@ -240,11 +250,13 @@ Zenskar can't create a wrong agency. Worst case is a single bad
 `SalesTaxItem` per nexus, recoverable by inactivating it.
 
 ### C11. SuiteQL is read-only
+
 Discovery is SuiteQL; creation is SOAP. **Addressed by**: client
 layer (`connectors/netsuite/client/`) already has both; the create
 path lives alongside the existing discovery path.
 
 ### C12. `_refresh_erp_tax_codes` becomes hot-path-mutable
+
 Cache must grow mid-sync. **Addressed by**: append-only mid-sync
 cache mutation; concurrent-sync race protection via discovery-
 before-create + DUP_RCRD recovery (§4.7).
@@ -614,6 +626,7 @@ The mapping configuration UI lives under the NetSuite connector's
 Tax Settings tab. Four screens:
 
 **Screen 1 — Tax Settings landing**:
+
 - Provider selector (Avalara / TaxJar / Anrok / Stripe Tax /
   Manual). `Manual` is the existing flow; provider selection
   enables auto-create.
@@ -624,6 +637,7 @@ Tax Settings tab. Four screens:
 - Nexus mappings table.
 
 **Screen 2 — Add/Edit mapping (drawer)**:
+
 - "From provider" section: country / region / tax_type dropdowns.
 - "To NetSuite" section: Nexus / Subsidiary / Tax type / Tax
   agency vendor dropdowns, fetched live from NetSuite.
@@ -639,6 +653,7 @@ Tax Settings tab. Four screens:
   persisting.
 
 **Screen 3 — Provider discovery (on-demand)**:
+
 - Suggest-on-demand (not auto-populate). A "Detect nexuses from
   provider" button calls the active provider connector's
   `list_registered_nexuses()` adapter method and returns canonical
@@ -647,6 +662,7 @@ Tax Settings tab. Four screens:
 - Hidden when provider is `Manual`.
 
 **Screen 4 — Error recovery**:
+
 - Failed invoice → notification → click → drops into Screen 1
   with the missing mappings highlighted at the top of the table.
 - Aggregated error means the customer sees all gaps at once.
@@ -667,7 +683,7 @@ nexus list from the org's active provider connector instance
 
 Flow:
 
-```
+```text
 Tax Settings UI (NetSuite connector)
         │
         ▼
@@ -729,6 +745,7 @@ mapping gaps in real time.
 Consolidated for reference:
 
 **New in this PRD:**
+
 - `NEXUS_MAPPING_MISSING`
 - `NEXUS_MAPPING_INVALID`
 - `TAX_GROUPS_FEATURE_DISABLED`
@@ -736,6 +753,7 @@ Consolidated for reference:
 - `AUTO_CREATE_FAILED`
 
 **Reused from manual flow:**
+
 - `INACTIVE_TAX_CODE`
 - `RATE_MISMATCH`
 - `TAX_GATEWAY_ERROR`

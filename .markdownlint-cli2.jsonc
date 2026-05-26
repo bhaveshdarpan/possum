@@ -1,0 +1,14 @@
+{
+  "config": {
+    "default": true,
+    "MD013": false,
+    "MD033": false,
+    "MD041": false,
+    "MD060": false,
+    "MD024": { "siblings_only": true },
+    "MD007": { "indent": 2 },
+    "MD029": { "style": "ordered" }
+  },
+  "globs": ["docs/**/*.md", "README.md"],
+  "ignores": ["node_modules/**", "**/_archive/**"]
+}

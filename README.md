@@ -58,6 +58,7 @@ The Docs API is **not** required for v1 — we upload `.docx` and let Drive auto
 6. Note the service account email — it looks like `docs-sync@<project-id>.iam.gserviceaccount.com`. You'll paste it into Drive in the next step.
 
 You do **not** need:
+
 - Domain-wide delegation (only for impersonating end users).
 - Project IAM roles like Owner / Editor (those are for GCP resources, not Drive).
 
@@ -81,7 +82,7 @@ cp .env.example .env
 
 Edit `.env`:
 
-```
+```dotenv
 GOOGLE_APPLICATION_CREDENTIALS=/absolute/path/to/service-account.json
 DRIVE_ROOT_FOLDER_ID=<folder ID from step 3>
 ORG_DOMAIN=example.com
@@ -125,7 +126,7 @@ npm test           # vitest (no tests yet in Phase 1)
 
 ## Layout
 
-```
+```text
 docs/                          # source of truth (Markdown)
 src/
   config.ts                    # env validation
