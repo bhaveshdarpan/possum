@@ -1,4 +1,5 @@
 import { convertMarkdownToBuffer, type Options } from "@mohtasham/md-to-docx";
+import { fixTables } from "./docx-postprocess.js";
 
 // Font sizes are half-points (22 = 11pt). Spacing values are twips (240 = 12pt).
 // Poppins is a Google Font; Google Docs supports it natively after Drive import.
@@ -30,7 +31,10 @@ const docxOptions: Options = {
       enabled: true,
       allowedHosts: ["mermaid.ink"],
     },
-    fetchTimeoutMs: 15000,
+    // base64-encoded mermaid diagrams routinely exceed the library's 2048 default.
+    maxUrlLength: 32768,
+    maxImageBytes: 10 * 1024 * 1024,
+    fetchTimeoutMs: 30000,
   },
   codeHighlighting: {
     enabled: true,
@@ -54,5 +58,6 @@ const docxOptions: Options = {
 };
 
 export async function markdownToDocx(markdown: string): Promise<Buffer> {
-  return await convertMarkdownToBuffer(markdown, docxOptions);
+  const raw = await convertMarkdownToBuffer(markdown, docxOptions);
+  return await fixTables(raw);
 }
