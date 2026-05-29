@@ -1,6 +1,24 @@
 {
   "version": 2,
   "entries": {
+    "docs/Integrations/Avalara/Tax Domain Refactoring.md": {
+      "providers": {
+        "google-drive": {
+          "fileId": "1Rz6RwktsPMK0JBhI6JRWcDtfdUxE3YcX10IKN6Xd_5U",
+          "url": "https://docs.google.com/document/d/1Rz6RwktsPMK0JBhI6JRWcDtfdUxE3YcX10IKN6Xd_5U/edit?usp=drivesdk",
+          "lastSyncedHash": "sha256:5df74777433c7444fbca0e207f13c7bd1298f5e3d9ee51b32767836f38ee46ff"
+        }
+      }
+    },
+    "docs/Integrations/Netsuite/Avalara_Impl_Plan.md": {
+      "providers": {
+        "google-drive": {
+          "fileId": "1xCSxHILxRhyCHGkAOOJ2Rb22FNU7WkRF2xBJx6b_NoY",
+          "url": "https://docs.google.com/document/d/1xCSxHILxRhyCHGkAOOJ2Rb22FNU7WkRF2xBJx6b_NoY/edit?usp=drivesdk",
+          "lastSyncedHash": "sha256:1a3cc3d764be67e6d118603a5a0eb7fb4806c9503aab9b7cfe6d4e4e587539b7"
+        }
+      }
+    },
     "docs/Integrations/Netsuite/PRD.md": {
       "providers": {
         "google-drive": {
