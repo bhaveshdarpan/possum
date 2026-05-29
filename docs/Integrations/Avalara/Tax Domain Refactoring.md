@@ -1253,7 +1253,7 @@ is 11 PRs.
 
 ### What this gives you
 
-- **Add Anrok with confidence.** The contract tier tells you when
+- **Add Anrok with confidence right now.** The contract tier tells you when
   Anrok is behaviourally equivalent to Avalara.
 - **Fast feedback loop.** Domain and mapper tests run in
   milliseconds without touching the plugin engine.

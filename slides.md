@@ -24,17 +24,15 @@ layout: center
 - Read-only Docs &middot; org gets comment access
 
 ---
-layout: two-cols-header
+layout: default
 ---
 
 ## How it does
 
-::left::
-
 **Adding a new doc**
 
-```mermaid {scale: 0.6}
-flowchart TD
+```mermaid {scale: 0.45}
+flowchart LR
   A[Edit docs/*.md] --> B[Merge PR to main]
   B --> C[GitHub Action]
   C --> D{In _index.json?}
@@ -44,12 +42,10 @@ flowchart TD
   G --> H[Record fileId + hash]
 ```
 
-::right::
-
 **Updating an existing doc**
 
-```mermaid {scale: 0.6}
-flowchart TD
+```mermaid {scale: 0.45}
+flowchart LR
   A[Edit docs/*.md] --> B[Merge PR to main]
   B --> C[GitHub Action]
   C --> D{Content hash changed?}
@@ -99,7 +95,6 @@ layout: two-cols
 
 **Maintainability**
 
-- Plain TypeScript, plain functions
 - Pure converters &middot; no hidden state
 - Three layers: orchestrator &middot; converters &middot; providers
 
