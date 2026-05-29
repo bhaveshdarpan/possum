@@ -1,0 +1,68 @@
+# Syncs docs/**/*.md to Google Drive after a push/merge to main.
+#
+# Required repository secrets (Settings → Secrets and variables → Actions):
+#   GOOGLE_SERVICE_ACCOUNT_JSON  full contents of the service-account key file
+#   DRIVE_ROOT_FOLDER_ID         folder ID from the Drive URL
+#   ORG_DOMAIN                   Workspace domain for the commenter permission
+#
+# Trigger filter is path-scoped to docs/**, so the index commit this job
+# pushes back does not re-trigger the workflow (it only touches _index.json).
+
+name: Sync docs to Drive
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/**"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: docs-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Write service account key
+        env:
+          SA_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/sa"
+          printf '%s' "$SA_JSON" > "$RUNNER_TEMP/sa/key.json"
+          chmod 600 "$RUNNER_TEMP/sa/key.json"
+
+      - name: Run sync
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/sa/key.json
+          DRIVE_ROOT_FOLDER_ID: ${{ secrets.DRIVE_ROOT_FOLDER_ID }}
+          ORG_DOMAIN: ${{ secrets.ORG_DOMAIN }}
+        run: npm run push
+
+      - name: Commit updated _index.json
+        run: |
+          if [[ -z "$(git status --porcelain _index.json)" ]]; then
+            echo "No _index.json changes to commit."
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add _index.json
+          git commit -m "chore(docs): sync _index.json [skip ci]"
+          git push
