@@ -44,7 +44,7 @@ export async function runActions(
       case "update": {
         console.log(`update ${action.sourcePath}`);
         const docx = await markdownToDocx(action.body);
-        await updateDoc(ctx, action.fileId, docx);
+        await updateDoc(ctx, action.fileId, action.name, docx);
         const existing = next.entries[action.sourcePath];
         if (!existing) {
           throw new Error(

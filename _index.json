@@ -1,12 +1,102 @@
 {
   "version": 2,
   "entries": {
+    "docs/Integrations/Anrok/PRD Overview.md": {
+      "providers": {
+        "google-drive": {
+          "fileId": "1jWOtHTM2N-5s8o4IHmobOvCVUYjCwcnkFBG4H-soH1I",
+          "url": "https://docs.google.com/document/d/1jWOtHTM2N-5s8o4IHmobOvCVUYjCwcnkFBG4H-soH1I/edit?usp=drivesdk",
+          "lastSyncedHash": "sha256:67c8b7f5d55cc2ee441d97ff779ca2cdbe578bfecc53faaf50904e68559fffc3"
+        }
+      }
+    },
+    "docs/Integrations/Anrok/PRD.md": {
+      "providers": {
+        "google-drive": {
+          "fileId": "12jU8JaeF3BN-LBOg8kTeSa8q4FMdwBCBfMCLJ0aYxgo",
+          "url": "https://docs.google.com/document/d/12jU8JaeF3BN-LBOg8kTeSa8q4FMdwBCBfMCLJ0aYxgo/edit?usp=drivesdk",
+          "lastSyncedHash": "sha256:d6aade534dd735125f400912051c1240b6861736dd188635c00fb6f4d8cc4d4c"
+        }
+      }
+    },
+    "docs/Integrations/Anrok/Setup.md": {
+      "providers": {
+        "google-drive": {
+          "fileId": "1eHF-_pfJyhHTCGD41g30s16WcHhiGluekAMRaOVAK_s",
+          "url": "https://docs.google.com/document/d/1eHF-_pfJyhHTCGD41g30s16WcHhiGluekAMRaOVAK_s/edit?usp=drivesdk",
+          "lastSyncedHash": "sha256:4be60c0cfdc94277ade59268a4e43d9613da77c8de88405c15d8cc8e21055ca6"
+        }
+      }
+    },
+    "docs/Integrations/Anrok/UseCase.md": {
+      "providers": {
+        "google-drive": {
+          "fileId": "1U3I2gKW-qnd3weyiWcmsKow8X4-_UGDPjyCvCn5OU1g",
+          "url": "https://docs.google.com/document/d/1U3I2gKW-qnd3weyiWcmsKow8X4-_UGDPjyCvCn5OU1g/edit?usp=drivesdk",
+          "lastSyncedHash": "sha256:5c8ebf6b6419de911d1414f048e12da19a0fe8684aaf4b549cdcaa60d640effc"
+        }
+      }
+    },
+    "docs/Integrations/Anrok/Working/PRD Overview.md": {
+      "providers": {
+        "google-drive": {
+          "fileId": "1DljfY7MHci8UPhDoKAhAdRJRRNGFV_uLowkoBpxOvZQ",
+          "url": "https://docs.google.com/document/d/1DljfY7MHci8UPhDoKAhAdRJRRNGFV_uLowkoBpxOvZQ/edit?usp=drivesdk",
+          "lastSyncedHash": "sha256:4841d2259833375a7bdf0858e1cddd2f82b09d3e08365a97be791a4984669311"
+        }
+      }
+    },
+    "docs/Integrations/Anrok/Working/PRD.md": {
+      "providers": {
+        "google-drive": {
+          "fileId": "1I0GqmV4SJIYWDTX6oxZxH3iPb7lPv0XAnQ16VR9VBTU",
+          "url": "https://docs.google.com/document/d/1I0GqmV4SJIYWDTX6oxZxH3iPb7lPv0XAnQ16VR9VBTU/edit?usp=drivesdk",
+          "lastSyncedHash": "sha256:1120d169055696954a61b00671b387bedcb41d0c77922bf43c6a18ed6ec0cd93"
+        }
+      }
+    },
+    "docs/Integrations/Avalara/Setup.md": {
+      "providers": {
+        "google-drive": {
+          "fileId": "1yvKzA9ScvcfV5W8ECHlHfmQ8PG5Y82JvEsoPoDheEvQ",
+          "url": "https://docs.google.com/document/d/1yvKzA9ScvcfV5W8ECHlHfmQ8PG5Y82JvEsoPoDheEvQ/edit?usp=drivesdk",
+          "lastSyncedHash": "sha256:2ae2c7091ccb731fc6047c9f9d084daded0d2d269ff0dd6a6452524ed454ce8e"
+        }
+      }
+    },
     "docs/Integrations/Avalara/Tax Domain Refactoring.md": {
       "providers": {
         "google-drive": {
           "fileId": "1Rz6RwktsPMK0JBhI6JRWcDtfdUxE3YcX10IKN6Xd_5U",
           "url": "https://docs.google.com/document/d/1Rz6RwktsPMK0JBhI6JRWcDtfdUxE3YcX10IKN6Xd_5U/edit?usp=drivesdk",
-          "lastSyncedHash": "sha256:5df74777433c7444fbca0e207f13c7bd1298f5e3d9ee51b32767836f38ee46ff"
+          "lastSyncedHash": "sha256:01b3b8152f27513c13ccd8e0e9753f80e59be1b09e782cb7cf85c4d69c945563"
+        }
+      }
+    },
+    "docs/Integrations/Avalara/UseCase.md": {
+      "providers": {
+        "google-drive": {
+          "fileId": "1FIy5vgUsr4x6FirNPKnNpAHeM_qZewB5Uf-U3aWAGqk",
+          "url": "https://docs.google.com/document/d/1FIy5vgUsr4x6FirNPKnNpAHeM_qZewB5Uf-U3aWAGqk/edit?usp=drivesdk",
+          "lastSyncedHash": "sha256:42d92d0e032e30c2d26445361a71cb6ca856b8953e9f1d856be532e8a21f0289"
+        }
+      }
+    },
+    "docs/Integrations/Avalara/Working/Tax Domain Refactoring.md": {
+      "providers": {
+        "google-drive": {
+          "fileId": "1WsnSwclE3qhE_N83p3VeFZVC1kl_3u0YAC-xPBZiCR0",
+          "url": "https://docs.google.com/document/d/1WsnSwclE3qhE_N83p3VeFZVC1kl_3u0YAC-xPBZiCR0/edit?usp=drivesdk",
+          "lastSyncedHash": "sha256:6664639b5764efa55731569b75ac9cc68a248752febd86d16e3cc2acfabf10e5"
+        }
+      }
+    },
+    "docs/Integrations/Netsuite/Avalara Tax Sync.md": {
+      "providers": {
+        "google-drive": {
+          "fileId": "13L0os8jUfWK1vlK3Zfyhs57KiHGSiHADgzzWm8w_TPM",
+          "url": "https://docs.google.com/document/d/13L0os8jUfWK1vlK3Zfyhs57KiHGSiHADgzzWm8w_TPM/edit?usp=drivesdk",
+          "lastSyncedHash": "sha256:1a3cc3d764be67e6d118603a5a0eb7fb4806c9503aab9b7cfe6d4e4e587539b7"
         }
       }
     },
@@ -19,12 +109,282 @@
         }
       }
     },
+    "docs/Integrations/Netsuite/Non-Taxable Handling.md": {
+      "providers": {
+        "google-drive": {
+          "fileId": "1ZZq3x1p2_Icwm-i4oHWrwL-oQ2dvxbq7GHSXZxWmNBs",
+          "url": "https://docs.google.com/document/d/1ZZq3x1p2_Icwm-i4oHWrwL-oQ2dvxbq7GHSXZxWmNBs/edit?usp=drivesdk",
+          "lastSyncedHash": "sha256:33dd89c676acc38fa199cf7bbd65cc4ba1cb5a4be2251438a533be68ec6f085b"
+        }
+      }
+    },
     "docs/Integrations/Netsuite/PRD.md": {
       "providers": {
         "google-drive": {
           "fileId": "18YOgrR3WIwt9t_3oxrQV_467NE5OUkypzYl1mOfe-14",
           "url": "https://docs.google.com/document/d/18YOgrR3WIwt9t_3oxrQV_467NE5OUkypzYl1mOfe-14/edit?usp=drivesdk",
           "lastSyncedHash": "sha256:9df5ce4defcd1473d37b474d6358685c169c04c87021d2f3badeb1217d36abfe"
+        }
+      }
+    },
+    "docs/Integrations/Netsuite/Setup.md": {
+      "providers": {
+        "google-drive": {
+          "fileId": "10NiHQvAgSih8Kfaohr8PXDiUcjOHynisB3KqAb5oxPc",
+          "url": "https://docs.google.com/document/d/10NiHQvAgSih8Kfaohr8PXDiUcjOHynisB3KqAb5oxPc/edit?usp=drivesdk",
+          "lastSyncedHash": "sha256:8641c52f7cf52466950e4e3f6c5be479b20e37ffd434ff57792fa6604dfebd49"
+        }
+      }
+    },
+    "docs/Integrations/Netsuite/Taxable/Non-Taxable Handling.md": {
+      "providers": {
+        "google-drive": {
+          "fileId": "1Tt-blS6NR-R7B_oZ277Yk9SDr81T-iCfxxFCBk1fOyc",
+          "url": "https://docs.google.com/document/d/1Tt-blS6NR-R7B_oZ277Yk9SDr81T-iCfxxFCBk1fOyc/edit?usp=drivesdk",
+          "lastSyncedHash": "sha256:98959655a635671b1a3b78828a2c466166e875285977e06d36c393b5bdf652bc"
+        }
+      }
+    },
+    "docs/Integrations/Netsuite/UseCase.md": {
+      "providers": {
+        "google-drive": {
+          "fileId": "15A9u_7E12K6Gzl5tCHVeWfr0d9Ak0_O_C5je2pBDAXw",
+          "url": "https://docs.google.com/document/d/15A9u_7E12K6Gzl5tCHVeWfr0d9Ak0_O_C5je2pBDAXw/edit?usp=drivesdk",
+          "lastSyncedHash": "sha256:38425ce3574b3d9b5dfc5d2ab4d108aaa0b3e7502004a4c5d9ad9632fb22cb3d"
+        }
+      }
+    },
+    "docs/Integrations/Netsuite/Working/Avalara Tax Sync.md": {
+      "providers": {
+        "google-drive": {
+          "fileId": "1W5jcL0N3faH7zAcbgisE8IQhrhP6eRrkrwesvV2pbaQ",
+          "url": "https://docs.google.com/document/d/1W5jcL0N3faH7zAcbgisE8IQhrhP6eRrkrwesvV2pbaQ/edit?usp=drivesdk",
+          "lastSyncedHash": "sha256:4fcde5b3b1c53055c41ed25d6e2c43c36ae1d2b3d773d3466fc250e7a41acbca"
+        }
+      }
+    },
+    "docs/Integrations/Netsuite/Working/Non-Taxable Handling.md": {
+      "providers": {
+        "google-drive": {
+          "fileId": "1buQGN2rUwuvEs1LOMH3ySu211zSWUVW0mQNDkpswngI",
+          "url": "https://docs.google.com/document/d/1buQGN2rUwuvEs1LOMH3ySu211zSWUVW0mQNDkpswngI/edit?usp=drivesdk",
+          "lastSyncedHash": "sha256:2b5b1d8b11c82fc2c4eb597b79e54c28098dde4cae481e434db4dc38b46745b8"
+        }
+      }
+    },
+    "docs/Integrations/Netsuite/Working/PRD.md": {
+      "providers": {
+        "google-drive": {
+          "fileId": "1OGiPppyoeS4U_KEIB0eM-0bzpNKPVGqCRnuuebqUwbM",
+          "url": "https://docs.google.com/document/d/1OGiPppyoeS4U_KEIB0eM-0bzpNKPVGqCRnuuebqUwbM/edit?usp=drivesdk",
+          "lastSyncedHash": "sha256:04234b011fecf858a67fe02165b6c64c8e68dae87cba7a670d2df3bfdb17d23c"
+        }
+      }
+    },
+    "docs/Integrations/Quickbooks/AST QBO.md": {
+      "providers": {
+        "google-drive": {
+          "fileId": "1F2hJPVv6IVDH2VIkA2dY7mN20yHGna_mVcCqi7Fz3_g",
+          "url": "https://docs.google.com/document/d/1F2hJPVv6IVDH2VIkA2dY7mN20yHGna_mVcCqi7Fz3_g/edit?usp=drivesdk",
+          "lastSyncedHash": "sha256:350596703f3f29831e92439ff8d5b3af886fcf7c9fe082af7ce95d1056167abc"
+        }
+      }
+    },
+    "docs/Integrations/Quickbooks/Avalara Tax Sync Impl Plan.md": {
+      "providers": {
+        "google-drive": {
+          "fileId": "1Pfwua67u0PCy8VUqwTdqGO_V8jSWe9WEhwYXn2D7KNw",
+          "url": "https://docs.google.com/document/d/1Pfwua67u0PCy8VUqwTdqGO_V8jSWe9WEhwYXn2D7KNw/edit?usp=drivesdk",
+          "lastSyncedHash": "sha256:a209c6883f1c722c835f31c4f8505ea8dc501ea640cfcd749f7098b109bf4451"
+        }
+      }
+    },
+    "docs/Integrations/Quickbooks/Avalara Tax Sync PRD.md": {
+      "providers": {
+        "google-drive": {
+          "fileId": "1HCEHOstSukW59aXmagPoljEumjqWqCYQyhzXd_JgVpg",
+          "url": "https://docs.google.com/document/d/1HCEHOstSukW59aXmagPoljEumjqWqCYQyhzXd_JgVpg/edit?usp=drivesdk",
+          "lastSyncedHash": "sha256:95e24c135b4f341637c5587274d727453f1a0161d1426835f816d908abc59585"
+        }
+      }
+    },
+    "docs/Integrations/Quickbooks/Avalara Tax Sync.md": {
+      "providers": {
+        "google-drive": {
+          "fileId": "1cXJeUi7xyY6exLw4hvh09Ka7yFWzfi_KiKGiH6Ef1tQ",
+          "url": "https://docs.google.com/document/d/1cXJeUi7xyY6exLw4hvh09Ka7yFWzfi_KiKGiH6Ef1tQ/edit?usp=drivesdk",
+          "lastSyncedHash": "sha256:2a8b0b537cd3449cd614ed0bae6cda4ac200e74292fad5be01e93baa2c71a905"
+        }
+      }
+    },
+    "docs/Integrations/Quickbooks/Setup.md": {
+      "providers": {
+        "google-drive": {
+          "fileId": "12uMZrr-vpFpfaRDZTrf4vWMk6mbmAnD5MABvdWEHDfE",
+          "url": "https://docs.google.com/document/d/12uMZrr-vpFpfaRDZTrf4vWMk6mbmAnD5MABvdWEHDfE/edit?usp=drivesdk",
+          "lastSyncedHash": "sha256:638623917bbb8ac2e633dc2c6c58f3630d28ddbf3cf54b1e6042675c746ac7e4"
+        }
+      }
+    },
+    "docs/Integrations/Quickbooks/UseCase.md": {
+      "providers": {
+        "google-drive": {
+          "fileId": "1Q_qj7grCUfvjTgJaBOeImUrO6HtLs6xmrbJ11HsF9ho",
+          "url": "https://docs.google.com/document/d/1Q_qj7grCUfvjTgJaBOeImUrO6HtLs6xmrbJ11HsF9ho/edit?usp=drivesdk",
+          "lastSyncedHash": "sha256:c0e7bf348a7ba03f0b3992d64154d8410fe759ea7350fa4b1913e90f3394b0b0"
+        }
+      }
+    },
+    "docs/Integrations/Quickbooks/Working/AST QBO.md": {
+      "providers": {
+        "google-drive": {
+          "fileId": "1lW5UPV8_PSFur1iHs2lkDUv3JkfDuCHJFqHGk9hDvgA",
+          "url": "https://docs.google.com/document/d/1lW5UPV8_PSFur1iHs2lkDUv3JkfDuCHJFqHGk9hDvgA/edit?usp=drivesdk",
+          "lastSyncedHash": "sha256:8d98ff126b66ef9f195d043f92577782db5101c4b13803a4d92482f67ffdc912"
+        }
+      }
+    },
+    "docs/Integrations/Quickbooks/Working/AST Workaround.md": {
+      "providers": {
+        "google-drive": {
+          "fileId": "1wEfOlopUgcQAuLl1-DS-AUO4xhM2aeerRWUh07erPSI",
+          "url": "https://docs.google.com/document/d/1wEfOlopUgcQAuLl1-DS-AUO4xhM2aeerRWUh07erPSI/edit?usp=drivesdk",
+          "lastSyncedHash": "sha256:2eff66907276b89a970aebcec5a48d5f94fab91d66b9a96b30fe6d96a90c9868"
+        }
+      }
+    },
+    "docs/Integrations/Quickbooks/Working/Avalara Tax Sync Impl Plan.md": {
+      "providers": {
+        "google-drive": {
+          "fileId": "13lUG-u17eW4WJbMbs2c96dEe5Hq_Odjop5NeFLqY0M0",
+          "url": "https://docs.google.com/document/d/13lUG-u17eW4WJbMbs2c96dEe5Hq_Odjop5NeFLqY0M0/edit?usp=drivesdk",
+          "lastSyncedHash": "sha256:d1930123bdbb09a7621eded85dc424df32bfe9c16d071a3fb659169efcbefddf"
+        }
+      }
+    },
+    "docs/Integrations/Quickbooks/Working/Avalara Tax Sync PRD.md": {
+      "providers": {
+        "google-drive": {
+          "fileId": "1n_3bcC61WOCGtudhfM9sJnh7_uEMaybaTZCrAmSVNl8",
+          "url": "https://docs.google.com/document/d/1n_3bcC61WOCGtudhfM9sJnh7_uEMaybaTZCrAmSVNl8/edit?usp=drivesdk",
+          "lastSyncedHash": "sha256:ed032af081536b30c9ed20de7ee9dce6615161a181e6cc73f70fae77acc90d57"
+        }
+      }
+    },
+    "docs/Integrations/README.md": {
+      "providers": {
+        "google-drive": {
+          "fileId": "143MgP8s-Zr-OE4v5JTM8diZDnydhVNWMyMQK2mC3gbU",
+          "url": "https://docs.google.com/document/d/143MgP8s-Zr-OE4v5JTM8diZDnydhVNWMyMQK2mC3gbU/edit?usp=drivesdk",
+          "lastSyncedHash": "sha256:f63a77028ef2d9c6ea9ff334f2bf343a8849fbb77e257c0f826bf189f636c432"
+        }
+      }
+    },
+    "docs/Integrations/_Template/Setup.md": {
+      "providers": {
+        "google-drive": {
+          "fileId": "1BncAbODVjVgSgFJc7HLrJH4JFZd8lRJchtcf_2iLPkM",
+          "url": "https://docs.google.com/document/d/1BncAbODVjVgSgFJc7HLrJH4JFZd8lRJchtcf_2iLPkM/edit?usp=drivesdk",
+          "lastSyncedHash": "sha256:ae78a9918e10ee20a89af6fd0478731d319a26e317356ab262a05f3e8a2b53d4"
+        }
+      }
+    },
+    "docs/Integrations/_Template/UseCase.md": {
+      "providers": {
+        "google-drive": {
+          "fileId": "10A9H3hJyhzRh4Cl4BF-bzXN7xrmYPBK9ODlwLi_lAEo",
+          "url": "https://docs.google.com/document/d/10A9H3hJyhzRh4Cl4BF-bzXN7xrmYPBK9ODlwLi_lAEo/edit?usp=drivesdk",
+          "lastSyncedHash": "sha256:c43538301c40d404a07c930d72814dfade79fb66c70232423eeec8a104a6da0d"
+        }
+      }
+    },
+    "docs/Integrations/_Template/setup-template.md": {
+      "providers": {
+        "google-drive": {
+          "fileId": "1TRHJJeuoM7jXgW9xkgvOsLGx2Vv8AiDnFXAtm8tLYlg",
+          "url": "https://docs.google.com/document/d/1TRHJJeuoM7jXgW9xkgvOsLGx2Vv8AiDnFXAtm8tLYlg/edit?usp=drivesdk",
+          "lastSyncedHash": "sha256:2e6d183a99803bb6937b8a4f19375318b9767337dad31ab353757441f54492ac"
+        }
+      }
+    },
+    "docs/Integrations/_Template/usecase.md": {
+      "providers": {
+        "google-drive": {
+          "fileId": "15tlgBClvmqMNXA8eWEUCpSMLnh1E89kQQgrVxP2fAGY",
+          "url": "https://docs.google.com/document/d/15tlgBClvmqMNXA8eWEUCpSMLnh1E89kQQgrVxP2fAGY/edit?usp=drivesdk",
+          "lastSyncedHash": "sha256:8fb80b3c3f5eefe7f5660141d7210a2fc981c7bb9a035866b4e60e490a7f1aaf"
+        }
+      }
+    },
+    "docs/Integrations/setup-template.md": {
+      "providers": {
+        "google-drive": {
+          "fileId": "1v0jw9qF3dnJnaMOocqFfUT21mWONR027Y-cT_qAjKoE",
+          "url": "https://docs.google.com/document/d/1v0jw9qF3dnJnaMOocqFfUT21mWONR027Y-cT_qAjKoE/edit?usp=drivesdk",
+          "lastSyncedHash": "sha256:2e6d183a99803bb6937b8a4f19375318b9767337dad31ab353757441f54492ac"
+        }
+      }
+    },
+    "docs/Integrations/usecase.md": {
+      "providers": {
+        "google-drive": {
+          "fileId": "1qrge0uCr4bKUz4sskuuo5M5xb4xZO1lpwREYJGQ1chc",
+          "url": "https://docs.google.com/document/d/1qrge0uCr4bKUz4sskuuo5M5xb4xZO1lpwREYJGQ1chc/edit?usp=drivesdk",
+          "lastSyncedHash": "sha256:8fb80b3c3f5eefe7f5660141d7210a2fc981c7bb9a035866b4e60e490a7f1aaf"
+        }
+      }
+    },
+    "docs/Internal Centralization Platform/Frontend.md": {
+      "providers": {
+        "google-drive": {
+          "fileId": "1FylGMEH3C3F2Wvm0K1e7v6AgkAbiO5AShnYPqBdEQdY",
+          "url": "https://docs.google.com/document/d/1FylGMEH3C3F2Wvm0K1e7v6AgkAbiO5AShnYPqBdEQdY/edit?usp=drivesdk",
+          "lastSyncedHash": "sha256:64df48316d1924e238d3e44147cc625312c80250b1e9ccf96509c88c2f239d07"
+        }
+      }
+    },
+    "docs/Internal Centralization Platform/Frontend_Concise.md": {
+      "providers": {
+        "google-drive": {
+          "fileId": "1JepABl3Ir6LQYQdl1dSC9eZnyar4rDMuufnPMaf_Mww",
+          "url": "https://docs.google.com/document/d/1JepABl3Ir6LQYQdl1dSC9eZnyar4rDMuufnPMaf_Mww/edit?usp=drivesdk",
+          "lastSyncedHash": "sha256:287f3ecddcc305251902285df9ea44288c13cb974e4c8065fa4ce84579606aee"
+        }
+      }
+    },
+    "docs/Internal Centralization Platform/HLD.md": {
+      "providers": {
+        "google-drive": {
+          "fileId": "1VrTGxFgtdY1PvE05sOqAQvxaQRv2og7pNoseIT4QrpU",
+          "url": "https://docs.google.com/document/d/1VrTGxFgtdY1PvE05sOqAQvxaQRv2og7pNoseIT4QrpU/edit?usp=drivesdk",
+          "lastSyncedHash": "sha256:d0f8d45fd9d0f05d8fa08a4ef1ad4ab78e777f447017d54ed57f4f5a4f089885"
+        }
+      }
+    },
+    "docs/Internal Centralization Platform/LLD.md": {
+      "providers": {
+        "google-drive": {
+          "fileId": "1zGMxBSkbfRSPqZPzsU4xW3hGbqj6S5ob43Fv8OyszHQ",
+          "url": "https://docs.google.com/document/d/1zGMxBSkbfRSPqZPzsU4xW3hGbqj6S5ob43Fv8OyszHQ/edit?usp=drivesdk",
+          "lastSyncedHash": "sha256:646789f9534d6cd208c0ff3d4feb91d9765998de0e6dd7f0907e96a715fb9920"
+        }
+      }
+    },
+    "docs/Internal Centralization Platform/LLD_concise.md": {
+      "providers": {
+        "google-drive": {
+          "fileId": "1JbzElse4hKc8srsUeTUaiZ8tLZ8uyfV7PjYf7kGxuQQ",
+          "url": "https://docs.google.com/document/d/1JbzElse4hKc8srsUeTUaiZ8tLZ8uyfV7PjYf7kGxuQQ/edit?usp=drivesdk",
+          "lastSyncedHash": "sha256:42463192eca41d0293ec9e4aa2e95a2ad8c5ac22c347b1cb1c570caa7dc918a9"
+        }
+      }
+    },
+    "docs/Internal Centralization Platform/PRD.md": {
+      "providers": {
+        "google-drive": {
+          "fileId": "17Pj_XaH_lH3g_28_sn4p-Gxhchr9UE24JNYiw2Prb8E",
+          "url": "https://docs.google.com/document/d/17Pj_XaH_lH3g_28_sn4p-Gxhchr9UE24JNYiw2Prb8E/edit?usp=drivesdk",
+          "lastSyncedHash": "sha256:172162c0321548a0c01a291b894c8a70076943a26e6b9085c349c3ff2c9be85b"
         }
       }
     },

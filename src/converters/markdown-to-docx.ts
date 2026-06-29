@@ -1,5 +1,5 @@
 import { convertMarkdownToBuffer, type Options } from "@mohtasham/md-to-docx";
-import { fixTables } from "./docx-postprocess.js";
+import { postProcessDocx } from "./docx-postprocess.js";
 
 // Font sizes are half-points (22 = 11pt). Spacing values are twips (240 = 12pt).
 // Poppins is a Google Font; Google Docs supports it natively after Drive import.
@@ -59,5 +59,5 @@ const docxOptions: Options = {
 
 export async function markdownToDocx(markdown: string): Promise<Buffer> {
   const raw = await convertMarkdownToBuffer(markdown, docxOptions);
-  return await fixTables(raw);
+  return await postProcessDocx(raw);
 }

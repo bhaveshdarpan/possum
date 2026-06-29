@@ -36,10 +36,12 @@ export async function createDoc(
 export async function updateDoc(
   ctx: DriveContext,
   fileId: string,
+  name: string,
   docx: Buffer,
 ): Promise<void> {
   await ctx.drive.files.update({
     fileId,
+    requestBody: { name },
     media: { mimeType: DOCX_MIME, body: bufferToStream(docx) },
     supportsAllDrives: true,
   });
