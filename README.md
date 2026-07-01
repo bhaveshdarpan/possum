@@ -1,38 +1,87 @@
-# documentation_repository
+# documentation-repository
 
-Source of truth for product documentation (PRDs, implementation plans). Markdown files in this repo are the canonical version; a sync engine pushes them to Google Drive as Google Docs, so non-engineers can read and comment without round-tripping through GitHub.
+Canonical home for product/technical docs, plus the pluggable pipeline that publishes them.
 
-**Phase 1 (current):** Drive + Markdown, push-only, manual run. Handles new files (`Add`) and edits (`Modify`). Rename, delete, GitHub Action automation, additional providers, and additional file types are deferred.
+Docs are written once as Markdown in Git (single source of truth) and **published** one‑way to consumption surfaces. Only review feedback flows back, as pull requests.
+
+> **Status:** V1 in design; specs in [`docs/`](docs/). A working PoC exists locally and is being reconciled with these specs.
+
+## Flow (V1)
+
+```mermaid
+flowchart LR
+  A["Git repos<br/>Markdown + front-matter"] -->|merge triggers CI| B["docpipe<br/>pipeline"]
+  B --> C["Google Docs<br/>comment / review mirror"]
+  C -. comments to PRs .-> A
+  B -. deferred .-> D[Docusaurus]
+  B -. deferred .-> E[PDF]
+  B -. deferred .-> F["AI index"]
+```
+
+## V1 scope
+
+- **Store:** Markdown in Git, one or many repos.
+- **Pipeline:** config‑driven engine `docpipe`; a repo adopts it with a manifest + shared CI workflow — no repo‑specific code.
+- **One publisher:** Google Docs (one‑way mirror).
+
+**Deferred** (designed for, not built): Docusaurus, PDF, AI index, versioning, per‑doc access control.
+
+## Approach
+
+- **DDD** — bounded contexts + one ubiquitous language: [domain model](docs/architecture/domain-model.md).
+- **BDD** — behaviour specified in Gherkin, executable: [testing strategy](docs/testing/testing-strategy.md).
+
+## Why this exists
+
+- **Edit the Markdown, not the Doc.** The Doc is a read-only published mirror (org gets commenter access on creation). Direct edits will be overwritten on the next sync.
+- **Document URLs are stable.** Edits update the existing Doc in place, so external links keep working.
+
+## Adopt in 3 steps
+
+1. Add `docpipe.yaml` (below).
+2. Call the shared CI workflow on merge to the default branch.
+3. Add `publish:` front‑matter to docs you want mirrored.
+
+```yaml
+# docpipe.yaml
+version: 1
+source: { type: git, docsDir: docs }
+targets:
+  - {
+      name: google-docs,
+      type: google-docs,
+      driveFolderId: "<id>",
+      mode: mirror,
+    }
+defaults: { onUnchanged: skip, publish: [google-docs] }
+```
+
+```yaml
+# per-document front-matter
+---
+title: Payments overview
+owner: payments-team
+publish: [google-docs]
+gdoc: "<filled-in-on-first-publish>"
+---
+```
+
+The Doc name in Drive is taken from `title` if present, otherwise from the filename. Folder hierarchy under `docs/` is mirrored under the Drive root folder. Files outside `docs/` are ignored.
 
 ## Workflow
 
 1. Branch from `main`.
-2. Create or edit a file under `docs/` (e.g. `docs/prd/product-a/feature-x.md`).
+2. Create or edit a file under `docs/` (e.g. `docs/product/prd.md`).
 3. Open a PR. Review on the Markdown diff.
 4. Merge.
-5. Run `npm run push` locally.
-6. Commit and push the updated `_index.json`.
+5. Publish — either automatically on merge (CI) or manually with `npm run push`.
 
-## Authoring conventions
+## Run modes
 
-Each Markdown file should start with YAML frontmatter:
+- **Manual:** `npm run push` — sync `docs/**` to Drive on demand. After a successful run, commit the updated `_index.json` ledger.
+- **On merge:** `.github/workflows/sync.yml` runs on push to `main` under `docs/**`, then commits the updated `_index.json` ledger back with `[skip ci]`.
 
-```yaml
----
-title: Feature X PRD
-owner: jane@example.com
-status: draft # draft | review | approved | archived
----
-```
-
-The Doc name in Drive is taken from `title` if present, otherwise from the filename.
-
-Folder hierarchy under `docs/` is mirrored under the Drive root folder. Files outside `docs/` are ignored.
-
-## Why this exists
-
-- **Edit the Markdown, not the Doc.** The Doc is a read-only published view (org gets commenter access on creation). Direct edits will be overwritten on the next sync.
-- **Document URLs are stable.** Edits update the existing Doc in place, so external links keep working.
+Config lives in the committed manifest; the **service‑account key stays a secret** (env / CI secret), never in the manifest.
 
 ## Setup
 
@@ -119,7 +168,7 @@ You should see a `create` line printed with a URL, the Doc should appear in Driv
 ```bash
 npm run push       # sync docs/** to Drive
 npm run typecheck  # tsc --noEmit
-npm test           # vitest (no tests yet in Phase 1)
+npm test           # vitest
 ```
 
 `npm run push` scans `docs/**/*.md`, compares each file's hash against `_index.json`, and creates/updates the matching Google Doc. Unchanged files are skipped. After a successful run, commit `_index.json`.
@@ -148,3 +197,7 @@ scripts/
   push.ts                      # thin wrapper around src/main.ts
 _index.json                    # path → provider → { fileId, url, hash }
 ```
+
+## Docs
+
+[PRD](docs/product/prd.md) · [Domain model](docs/architecture/domain-model.md) · [System design](docs/architecture/system-design.md) · [ADRs](docs/architecture/adr/) · [Testing strategy](docs/testing/testing-strategy.md)
