@@ -58,10 +58,26 @@ function rewriteMermaidBlocks(markdown: string): string {
   );
 }
 
+// Resolve a document's target list from front-matter, falling back to the
+// manifest default when `publish` is absent. An explicit `publish: []` (or a
+// malformed value) routes to no target.
+function resolvePublishTargets(
+  fmPublish: unknown,
+  defaultPublish: string[],
+): string[] {
+  if (fmPublish === undefined) return defaultPublish;
+  if (Array.isArray(fmPublish)) {
+    return fmPublish.filter((x): x is string => typeof x === "string");
+  }
+  return [];
+}
+
 export async function planSync(opts: {
   docsRoot: string;
   repoRoot: string;
   index: IndexFile;
+  targetName: string;
+  defaultPublish: string[];
 }): Promise<DocAction[]> {
   const actions: DocAction[] = [];
   for await (const fullPath of walkMarkdown(opts.docsRoot)) {
@@ -73,6 +89,15 @@ export async function planSync(opts: {
       .join("/");
 
     const parsed = matter(raw);
+
+    // Per-doc routing (P0-5): only publish docs whose target list includes
+    // this target. Docs routed elsewhere produce no action here.
+    const targets = resolvePublishTargets(
+      parsed.data["publish"],
+      opts.defaultPublish,
+    );
+    if (!targets.includes(opts.targetName)) continue;
+
     const fmTitle =
       typeof parsed.data["title"] === "string"
         ? parsed.data["title"].trim()

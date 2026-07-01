@@ -1,0 +1,18 @@
+# docpipe manifest — non-secret, structural config (ADR-0003).
+# The service-account key stays in env / CI secret, never here.
+version: 1
+
+source:
+  type: git
+  docsDir: docs
+
+targets:
+  - name: google-docs
+    type: google-docs
+    driveFolderId: "1sQFL5U1anB4CJhar6wClO11L3XA-qUrn"
+    orgDomain: zenskar.com
+    mode: mirror
+
+defaults:
+  onUnchanged: skip
+  publish: [google-docs]

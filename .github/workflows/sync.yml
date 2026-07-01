@@ -1,9 +1,10 @@
 # Syncs docs/**/*.md to Google Drive after a push/merge to main.
 #
-# Required repository secrets (Settings → Secrets and variables → Actions):
+# Required repository secret (Settings → Secrets and variables → Actions):
 #   GOOGLE_SERVICE_ACCOUNT_JSON  full contents of the service-account key file
-#   DRIVE_ROOT_FOLDER_ID         folder ID from the Drive URL
-#   ORG_DOMAIN                   Workspace domain for the commenter permission
+#
+# Structural config (driveFolderId, orgDomain) lives in the committed
+# docpipe.yaml manifest — not here (ADR-0003).
 #
 # Trigger filter is path-scoped to docs/**, so the index commit this job
 # pushes back does not re-trigger the workflow (it only touches _index.json).
@@ -51,8 +52,6 @@ jobs:
       - name: Run sync
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/sa/key.json
-          DRIVE_ROOT_FOLDER_ID: ${{ secrets.DRIVE_ROOT_FOLDER_ID }}
-          ORG_DOMAIN: ${{ secrets.ORG_DOMAIN }}
         run: npm run push
 
       - name: Commit updated _index.json

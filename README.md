@@ -129,15 +129,24 @@ npm install
 cp .env.example .env
 ```
 
-Edit `.env`:
+The service-account key is the only **secret** — it lives in `.env`:
 
 ```dotenv
 GOOGLE_APPLICATION_CREDENTIALS=/absolute/path/to/service-account.json
-DRIVE_ROOT_FOLDER_ID=<folder ID from step 3>
-ORG_DOMAIN=example.com
 ```
 
-`ORG_DOMAIN` is the Workspace domain that gets commenter access on every new Doc. If you're testing with a personal `@gmail.com` account, `type: domain` permission grants won't work — see _Personal account testing_ at the bottom.
+Everything else is **structural config** and lives in the committed `docpipe.yaml` (ADR-0003). Set the Drive folder ID from step 3 and your Workspace domain on the `google-docs` target:
+
+```yaml
+targets:
+  - name: google-docs
+    type: google-docs
+    driveFolderId: "<folder ID from step 3>"
+    orgDomain: example.com
+    mode: mirror
+```
+
+`orgDomain` is the Workspace domain that gets commenter access on every new Doc. If you're testing with a personal `@gmail.com` account, `type: domain` permission grants won't work — see _Personal account testing_ at the bottom.
 
 ### 5. Verify the setup
 
