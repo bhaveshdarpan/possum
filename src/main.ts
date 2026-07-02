@@ -1,6 +1,7 @@
 import path from "node:path";
 import { loadConfig } from "./config.js";
 import { loadManifest } from "./config/manifest.js";
+import { currentHead, detectRenames } from "./git.js";
 import { readIndex, writeIndex } from "./index/io.js";
 import type { IndexFile } from "./index/schema.js";
 import { planSync } from "./orchestrator/plan.js";
@@ -30,6 +31,17 @@ export async function main(): Promise<void> {
   let index = await readIndex(indexPath);
   let totalFailed = 0;
 
+  // Rename detection (P0-8): diff the last-synced commit against HEAD. When no
+  // SHA is recorded yet (or Git is unavailable), fall back to content-hash
+  // matching in the planner.
+  const head = currentHead(repoRoot);
+  const renames = detectRenames(
+    repoRoot,
+    index.lastSyncedSha,
+    manifest.source.docsDir,
+  );
+  const hashFallback = !index.lastSyncedSha || head === null;
+
   for (const target of googleTargets) {
     const actions = await planSync({
       docsRoot,
@@ -37,6 +49,9 @@ export async function main(): Promise<void> {
       index,
       targetName: target.name,
       defaultPublish: manifest.defaults.publish,
+      onDelete: manifest.defaults.onDelete,
+      renames,
+      hashFallback,
     });
 
     const counts: Record<string, number> = {};
@@ -60,6 +75,14 @@ export async function main(): Promise<void> {
     totalFailed += failed;
     await writeIndex(indexPath, index);
     console.log(`[${target.name}] index updated: ${path.relative(repoRoot, indexPath)}`);
+  }
+
+  // Advance the rename-detection baseline only on a clean run, so a partial
+  // failure re-detects the same renames next time instead of missing them.
+  if (totalFailed === 0 && head && index.lastSyncedSha !== head) {
+    index.lastSyncedSha = head;
+    await writeIndex(indexPath, index);
+    console.log(`ledger baseline advanced to ${head.slice(0, 7)}`);
   }
 
   if (totalFailed > 0) {

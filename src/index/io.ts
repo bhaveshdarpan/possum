@@ -14,6 +14,7 @@ export async function readIndex(path: string): Promise<IndexFile> {
 export async function writeIndex(path: string, index: IndexFile): Promise<void> {
   const sorted: IndexFile = {
     version: index.version,
+    ...(index.lastSyncedSha ? { lastSyncedSha: index.lastSyncedSha } : {}),
     entries: Object.fromEntries(
       Object.keys(index.entries)
         .sort()

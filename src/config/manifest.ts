@@ -27,9 +27,10 @@ const manifestSchema = z
     defaults: z
       .object({
         onUnchanged: z.enum(["skip"]).default("skip"),
+        onDelete: z.enum(["trash", "archive", "ignore"]).default("trash"),
         publish: z.array(z.string()).default([]),
       })
-      .default({ onUnchanged: "skip", publish: [] }),
+      .default({ onUnchanged: "skip", onDelete: "trash", publish: [] }),
   })
   .superRefine((m, ctx) => {
     // Invariant: every Target name is unique (domain-model PipelineConfig).

@@ -1,10 +1,32 @@
 import { markdownToDocx } from "../converters/markdown-to-docx.js";
 import type { DriveContext } from "../providers/google-drive/auth.js";
 import { ensureFolderPath } from "../providers/google-drive/folders.js";
-import { createDoc, updateDoc } from "../providers/google-drive/files.js";
+import {
+  createDoc,
+  updateDoc,
+  trashDoc,
+  moveDoc,
+} from "../providers/google-drive/files.js";
 import { grantDomainCommenter } from "../providers/google-drive/permissions.js";
 import type { IndexFile } from "../index/schema.js";
 import { PROVIDER, type DocAction } from "./plan.js";
+
+// Folder that `onDelete: archive` moves mirrors into, under the Drive root.
+const ARCHIVE_FOLDER = "_Archived";
+
+// Remove this provider's publication from a ledger path, dropping the entry
+// entirely once no providers remain. Builds fresh objects (no mutation of
+// shared nested state).
+function dropProvider(index: IndexFile, sourcePath: string): void {
+  const entry = index.entries[sourcePath];
+  if (!entry) return;
+  const { [PROVIDER]: _removed, ...rest } = entry.providers;
+  if (Object.keys(rest).length === 0) {
+    delete index.entries[sourcePath];
+  } else {
+    index.entries[sourcePath] = { providers: rest };
+  }
+}
 
 export type RunResult = { next: IndexFile; failed: number };
 
@@ -79,6 +101,47 @@ export async function runActions(
               [PROVIDER]: { ...prev, lastSyncedHash: action.hash },
             },
           };
+          await writeLedger(next);
+          break;
+        }
+        case "rename": {
+          console.log(`rename ${action.fromPath} → ${action.sourcePath}`);
+          const fromEntry = next.entries[action.fromPath];
+          const prev = fromEntry?.providers[PROVIDER];
+          if (!prev) {
+            throw new Error(
+              `Internal: rename without source provider entry for ${action.fromPath}`,
+            );
+          }
+          // Reuse the same Drive file: update content, then move it to the new
+          // folder. id and URL stay stable, so external links keep working.
+          const docx = await markdownToDocx(action.body);
+          await updateDoc(ctx, action.fileId, action.name, docx);
+          const folderId = await ensureFolderPath(ctx, action.segments);
+          await moveDoc(ctx, action.fileId, folderId);
+          // Re-key the ledger from old path to new.
+          const toExisting = next.entries[action.sourcePath];
+          next.entries[action.sourcePath] = {
+            providers: {
+              ...(toExisting?.providers ?? {}),
+              [PROVIDER]: { ...prev, lastSyncedHash: action.hash },
+            },
+          };
+          dropProvider(next, action.fromPath);
+          await writeLedger(next);
+          break;
+        }
+        case "delete": {
+          console.log(
+            `delete ${action.sourcePath}  (onDelete: ${action.onDelete})`,
+          );
+          if (action.onDelete === "archive") {
+            const archiveId = await ensureFolderPath(ctx, [ARCHIVE_FOLDER]);
+            await moveDoc(ctx, action.fileId, archiveId);
+          } else {
+            await trashDoc(ctx, action.fileId);
+          }
+          dropProvider(next, action.sourcePath);
           await writeLedger(next);
           break;
         }

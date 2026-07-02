@@ -12,6 +12,9 @@ const entrySchema = z.object({
 
 export const indexSchema = z.object({
   version: z.literal(2),
+  // Commit synced last run — enables Git rename detection (P0-8). Optional so
+  // pre-existing ledgers (written before this field) still parse.
+  lastSyncedSha: z.string().min(1).optional(),
   entries: z.record(z.string(), entrySchema),
 });
 

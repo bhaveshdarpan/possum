@@ -46,3 +46,41 @@ export async function updateDoc(
     supportsAllDrives: true,
   });
 }
+
+// Move a file to the trash (reversible) — used for deleted sources.
+export async function trashDoc(
+  ctx: DriveContext,
+  fileId: string,
+): Promise<void> {
+  await ctx.drive.files.update({
+    fileId,
+    requestBody: { trashed: true },
+    supportsAllDrives: true,
+  });
+}
+
+// Reparent a file to `newFolderId`, keeping the same id/URL. No-op when the
+// file already lives exactly there.
+export async function moveDoc(
+  ctx: DriveContext,
+  fileId: string,
+  newFolderId: string,
+): Promise<void> {
+  const res = await ctx.drive.files.get({
+    fileId,
+    fields: "parents",
+    supportsAllDrives: true,
+  });
+  const parents = res.data.parents ?? [];
+  const removeParents = parents.filter((p) => p !== newFolderId);
+  const alreadyParent = parents.includes(newFolderId);
+  if (alreadyParent && removeParents.length === 0) return;
+  await ctx.drive.files.update({
+    fileId,
+    ...(alreadyParent ? {} : { addParents: newFolderId }),
+    ...(removeParents.length > 0
+      ? { removeParents: removeParents.join(",") }
+      : {}),
+    supportsAllDrives: true,
+  });
+}
