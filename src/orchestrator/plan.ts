@@ -3,43 +3,12 @@ import { createHash } from "crypto";
 import path from "path";
 import matter from "gray-matter";
 import type { IndexFile } from "../index/schema.js";
+import type { OnDelete, PublishAction } from "../domain/publish-plan.js";
 
 export const PROVIDER = "google-drive";
 
-export type OnDelete = "trash" | "archive" | "ignore";
-
-export type DocAction =
-  | {
-      kind: "create";
-      sourcePath: string;
-      segments: string[];
-      name: string;
-      body: string;
-      hash: string;
-    }
-  | {
-      kind: "update";
-      sourcePath: string;
-      fileId: string;
-      name: string;
-      body: string;
-      hash: string;
-    }
-  // Source moved/renamed: reuse the existing Drive file (id + URL stay stable),
-  // update content, move to the new folder, and re-key the ledger.
-  | {
-      kind: "rename";
-      fromPath: string;
-      sourcePath: string;
-      fileId: string;
-      segments: string[];
-      name: string;
-      body: string;
-      hash: string;
-    }
-  // Source no longer on disk: trash/archive the mirror and drop the entry.
-  | { kind: "delete"; sourcePath: string; fileId: string; onDelete: OnDelete }
-  | { kind: "skip"; sourcePath: string; reason: string };
+export type { OnDelete };
+export type DocAction = PublishAction;
 
 // A doc discovered on disk and routed to this target, before we know whether it
 // is a fresh create or the destination of a rename.
