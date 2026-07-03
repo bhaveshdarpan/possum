@@ -2,13 +2,12 @@ import { readdir, readFile } from "fs/promises";
 import { createHash } from "crypto";
 import path from "path";
 import matter from "gray-matter";
-import type { IndexFile } from "../index/schema.js";
-import type { OnDelete, PublishAction } from "../domain/publish-plan.js";
-
-export const PROVIDER = "google-drive";
-
-export type { OnDelete };
-export type DocAction = PublishAction;
+import type { Ledger } from "../domain/ledger.js";
+import type {
+  OnDelete,
+  PublishAction,
+  PublishPlan,
+} from "../domain/publish-plan.js";
 
 // A doc discovered on disk and routed to this target, before we know whether it
 // is a fresh create or the destination of a rename.
@@ -70,8 +69,10 @@ function resolvePublishTargets(
 export async function planSync(opts: {
   docsRoot: string;
   repoRoot: string;
-  index: IndexFile;
+  index: Ledger;
   targetName: string;
+  // Ledger key for this target's publications (the publisher's providerId).
+  providerId: string;
   defaultPublish: string[];
   onDelete: OnDelete;
   // Git-detected renames (old → new repo-relative POSIX path).
@@ -79,8 +80,8 @@ export async function planSync(opts: {
   // Allow content-hash rename matching when Git history can't be consulted
   // (no lastSyncedSha yet, or Git unavailable).
   hashFallback: boolean;
-}): Promise<DocAction[]> {
-  const actions: DocAction[] = [];
+}): Promise<PublishPlan> {
+  const actions: PublishAction[] = [];
   // Every .md on disk (routed or not) — used to tell "deleted" from "just not
   // routed to this target".
   const seenPaths = new Set<string>();
@@ -119,7 +120,7 @@ export async function planSync(opts: {
       .split(path.sep);
     const segments = relUnderDocs.slice(0, -1);
 
-    const provider = opts.index.entries[sourcePath]?.providers[PROVIDER];
+    const provider = opts.index.entries[sourcePath]?.providers[opts.providerId];
     if (!provider) {
       creates.push({ sourcePath, segments, name, body, hash });
     } else if (provider.lastSyncedHash === hash) {
@@ -152,7 +153,7 @@ export async function planSync(opts: {
     //    content. Ambiguous for identical files; only used when enabled.
     if (opts.hashFallback) {
       const oldHash =
-        opts.index.entries[oldPath]?.providers[PROVIDER]?.lastSyncedHash;
+        opts.index.entries[oldPath]?.providers[opts.providerId]?.lastSyncedHash;
       if (oldHash) {
         for (const c of creates) {
           if (!consumed.has(c.sourcePath) && c.hash === oldHash) return c;
@@ -163,7 +164,7 @@ export async function planSync(opts: {
   };
 
   for (const [ledgerPath, entry] of Object.entries(opts.index.entries)) {
-    const provider = entry.providers[PROVIDER];
+    const provider = entry.providers[opts.providerId];
     if (!provider || seenPaths.has(ledgerPath)) continue;
 
     const target = findRenameTarget(ledgerPath);

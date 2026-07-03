@@ -1,12 +1,12 @@
-import type { IndexFile } from "../index/schema.js";
+import type { Ledger } from "../domain/ledger.js";
+import type { PublishAction } from "../domain/publish-plan.js";
 import type { Publisher, DestinationRef } from "../ports/publisher.js";
-import type { DocAction } from "./plan.js";
 
 // Remove a publication (keyed by the publisher's providerId) from a ledger path,
 // dropping the entry entirely once no providers remain. Builds fresh objects (no
 // mutation of shared nested state).
 function dropProvider(
-  index: IndexFile,
+  index: Ledger,
   sourcePath: string,
   providerId: string,
 ): void {
@@ -20,11 +20,11 @@ function dropProvider(
   }
 }
 
-export type RunResult = { next: IndexFile; failed: number };
+export type RunResult = { next: Ledger; failed: number };
 
 // Persist the ledger after each successful action. Passed in so the caller owns
 // where the ledger lives (file path today; a store later).
-export type WriteLedger = (index: IndexFile) => Promise<void>;
+export type WriteLedger = (ledger: Ledger) => Promise<void>;
 
 // Executes a PublishPlan against a Publisher. The port hides all Drive/render
 // specifics; this layer owns ledger bookkeeping and the reliability guarantees:
@@ -37,12 +37,12 @@ export type WriteLedger = (index: IndexFile) => Promise<void>;
 //    created-but-unrecorded Doc that a re-run would duplicate.
 export async function runActions(
   publisher: Publisher,
-  index: IndexFile,
-  actions: DocAction[],
+  index: Ledger,
+  actions: PublishAction[],
   writeLedger: WriteLedger,
 ): Promise<RunResult> {
   const key = publisher.providerId;
-  const next: IndexFile = {
+  const next: Ledger = {
     version: index.version,
     ...(index.lastSyncedSha ? { lastSyncedSha: index.lastSyncedSha } : {}),
     entries: { ...index.entries },

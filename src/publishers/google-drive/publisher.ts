@@ -5,19 +5,15 @@ import type {
   RenderedDoc,
 } from "../../ports/publisher.js";
 import type { OnDelete } from "../../domain/publish-plan.js";
-import { markdownToDocx } from "../../converters/markdown-to-docx.js";
-import {
-  createDriveContext,
-  type DriveContext,
-} from "../../providers/google-drive/auth.js";
-import { ensureFolderPath } from "../../providers/google-drive/folders.js";
-import {
-  createDoc,
-  updateDoc,
-  moveDoc,
-  trashDoc,
-} from "../../providers/google-drive/files.js";
-import { grantDomainCommenter } from "../../providers/google-drive/permissions.js";
+import { markdownToDocx } from "./markdown-to-docx.js";
+import { createDriveContext, type DriveContext } from "./auth.js";
+import { ensureFolderPath } from "./folders.js";
+import { createDoc, updateDoc, moveDoc, trashDoc } from "./files.js";
+import { grantDomainCommenter } from "./permissions.js";
+
+// Stable ledger key for Google Drive publications. Wire-compatible with the
+// existing `_index.json` (never re-key this — it would orphan every mirror).
+export const GOOGLE_DRIVE_PROVIDER_ID = "google-drive";
 
 // Folder that `onDelete: archive` moves mirrors into, under the Drive root.
 const ARCHIVE_FOLDER = "_Archived";
@@ -27,8 +23,8 @@ const ARCHIVE_FOLDER = "_Archived";
 // Exported for tests (construct with a fake DriveContext); production code uses
 // the async factory below, which builds the authenticated context.
 export class GoogleDrivePublisher implements Publisher {
-  readonly type = "google-docs"; 
-  readonly providerId = "google-drive"; // stable ledger key (wire-compatible)
+  readonly type = "google-docs"; // manifest target type
+  readonly providerId = GOOGLE_DRIVE_PROVIDER_ID;
   readonly capabilities = { folders: true, comments: true };
 
   constructor(private readonly ctx: DriveContext) {}
