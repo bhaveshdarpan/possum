@@ -1,26 +1,18 @@
-import { markdownToDocx } from "../converters/markdown-to-docx.js";
-import type { DriveContext } from "../providers/google-drive/auth.js";
-import { ensureFolderPath } from "../providers/google-drive/folders.js";
-import {
-  createDoc,
-  updateDoc,
-  trashDoc,
-  moveDoc,
-} from "../providers/google-drive/files.js";
-import { grantDomainCommenter } from "../providers/google-drive/permissions.js";
 import type { IndexFile } from "../index/schema.js";
-import { PROVIDER, type DocAction } from "./plan.js";
+import type { Publisher, DestinationRef } from "../ports/publisher.js";
+import type { DocAction } from "./plan.js";
 
-// Folder that `onDelete: archive` moves mirrors into, under the Drive root.
-const ARCHIVE_FOLDER = "_Archived";
-
-// Remove this provider's publication from a ledger path, dropping the entry
-// entirely once no providers remain. Builds fresh objects (no mutation of
-// shared nested state).
-function dropProvider(index: IndexFile, sourcePath: string): void {
+// Remove a publication (keyed by the publisher's providerId) from a ledger path,
+// dropping the entry entirely once no providers remain. Builds fresh objects (no
+// mutation of shared nested state).
+function dropProvider(
+  index: IndexFile,
+  sourcePath: string,
+  providerId: string,
+): void {
   const entry = index.entries[sourcePath];
   if (!entry) return;
-  const { [PROVIDER]: _removed, ...rest } = entry.providers;
+  const { [providerId]: _removed, ...rest } = entry.providers;
   if (Object.keys(rest).length === 0) {
     delete index.entries[sourcePath];
   } else {
@@ -30,23 +22,29 @@ function dropProvider(index: IndexFile, sourcePath: string): void {
 
 export type RunResult = { next: IndexFile; failed: number };
 
-// Persist the ledger after each successful action. Passed in so the caller
-// owns where the ledger lives (file path today; a store later).
+// Persist the ledger after each successful action. Passed in so the caller owns
+// where the ledger lives (file path today; a store later).
 export type WriteLedger = (index: IndexFile) => Promise<void>;
 
-// Partial-failure isolation (P0-6): each action is wrapped in its own
-// try/catch, the ledger is persisted immediately after a successful
-// create/update — crucially BEFORE the permission grant, so a Doc is never
-// orphaned (recorded-less) if the grant throws — and one failure never blocks
-// the rest. The caller exits non-zero when `failed > 0`.
+// Executes a PublishPlan against a Publisher. The port hides all Drive/render
+// specifics; this layer owns ledger bookkeeping and the reliability guarantees:
+//
+//  - Partial-failure isolation (P0-6): each action has its own try/catch, the
+//    ledger is persisted immediately after each success, and one failure never
+//    blocks the rest. The caller exits non-zero when `failed > 0`.
+//  - No orphaned mirror (P0-6): on create, the ledger is persisted BEFORE
+//    `afterRecord` (the commenter grant), so a grant failure can't leave a
+//    created-but-unrecorded Doc that a re-run would duplicate.
 export async function runActions(
-  ctx: DriveContext,
+  publisher: Publisher,
   index: IndexFile,
   actions: DocAction[],
   writeLedger: WriteLedger,
 ): Promise<RunResult> {
+  const key = publisher.providerId;
   const next: IndexFile = {
     version: index.version,
+    ...(index.lastSyncedSha ? { lastSyncedSha: index.lastSyncedSha } : {}),
     entries: { ...index.entries },
   };
   let failed = 0;
@@ -58,47 +56,41 @@ export async function runActions(
           break;
         case "create": {
           console.log(`create ${action.sourcePath}`);
-          const docx = await markdownToDocx(action.body);
-          const folderId = await ensureFolderPath(ctx, action.segments);
-          const { fileId, url } = await createDoc(
-            ctx,
-            folderId,
-            action.name,
-            docx,
-          );
+          const ref = await publisher.create({
+            name: action.name,
+            body: action.body,
+            segments: action.segments,
+          });
           const existing = next.entries[action.sourcePath];
           next.entries[action.sourcePath] = {
             providers: {
               ...(existing?.providers ?? {}),
-              [PROVIDER]: { fileId, url, lastSyncedHash: action.hash },
+              [key]: { fileId: ref.id, url: ref.url, lastSyncedHash: action.hash },
             },
           };
-          // Record BEFORE the grant so a grant failure can't orphan the Doc.
+          // Record BEFORE afterRecord so a grant failure can't orphan the Doc.
           await writeLedger(next);
-          await grantDomainCommenter(ctx, fileId);
-          console.log(`       → ${url}`);
+          await publisher.afterRecord?.(ref);
+          console.log(`       → ${ref.url}`);
           break;
         }
         case "update": {
           console.log(`update ${action.sourcePath}`);
-          const docx = await markdownToDocx(action.body);
-          await updateDoc(ctx, action.fileId, action.name, docx);
           const existing = next.entries[action.sourcePath];
-          if (!existing) {
-            throw new Error(
-              `Internal: update action without index entry for ${action.sourcePath}`,
-            );
-          }
-          const prev = existing.providers[PROVIDER];
+          const prev = existing?.providers[key];
           if (!prev) {
             throw new Error(
               `Internal: update action without provider entry for ${action.sourcePath}`,
             );
           }
+          await publisher.update(
+            { id: action.fileId, url: prev.url },
+            { name: action.name, body: action.body },
+          );
           next.entries[action.sourcePath] = {
             providers: {
-              ...existing.providers,
-              [PROVIDER]: { ...prev, lastSyncedHash: action.hash },
+              ...existing!.providers,
+              [key]: { ...prev, lastSyncedHash: action.hash },
             },
           };
           await writeLedger(next);
@@ -106,28 +98,29 @@ export async function runActions(
         }
         case "rename": {
           console.log(`rename ${action.fromPath} → ${action.sourcePath}`);
-          const fromEntry = next.entries[action.fromPath];
-          const prev = fromEntry?.providers[PROVIDER];
+          const prev = next.entries[action.fromPath]?.providers[key];
           if (!prev) {
             throw new Error(
               `Internal: rename without source provider entry for ${action.fromPath}`,
             );
           }
-          // Reuse the same Drive file: update content, then move it to the new
-          // folder. id and URL stay stable, so external links keep working.
-          const docx = await markdownToDocx(action.body);
-          await updateDoc(ctx, action.fileId, action.name, docx);
-          const folderId = await ensureFolderPath(ctx, action.segments);
-          await moveDoc(ctx, action.fileId, folderId);
+          // Reuse the same mirror: update content, then move to the new folder.
+          // id and URL stay stable, so external links keep working.
+          const ref: DestinationRef = { id: action.fileId, url: prev.url };
+          await publisher.update(ref, {
+            name: action.name,
+            body: action.body,
+          });
+          await publisher.move(ref, action.segments);
           // Re-key the ledger from old path to new.
           const toExisting = next.entries[action.sourcePath];
           next.entries[action.sourcePath] = {
             providers: {
               ...(toExisting?.providers ?? {}),
-              [PROVIDER]: { ...prev, lastSyncedHash: action.hash },
+              [key]: { ...prev, lastSyncedHash: action.hash },
             },
           };
-          dropProvider(next, action.fromPath);
+          dropProvider(next, action.fromPath, key);
           await writeLedger(next);
           break;
         }
@@ -135,13 +128,13 @@ export async function runActions(
           console.log(
             `delete ${action.sourcePath}  (onDelete: ${action.onDelete})`,
           );
-          if (action.onDelete === "archive") {
-            const archiveId = await ensureFolderPath(ctx, [ARCHIVE_FOLDER]);
-            await moveDoc(ctx, action.fileId, archiveId);
-          } else {
-            await trashDoc(ctx, action.fileId);
-          }
-          dropProvider(next, action.sourcePath);
+          const prev = next.entries[action.sourcePath]?.providers[key];
+          const ref: DestinationRef = {
+            id: action.fileId,
+            url: prev?.url ?? "",
+          };
+          await publisher.delete(ref, action.onDelete);
+          dropProvider(next, action.sourcePath, key);
           await writeLedger(next);
           break;
         }

@@ -2,6 +2,7 @@ import type {
   Publisher,
   DestinationRef,
   PublishTargetDoc,
+  RenderedDoc,
 } from "../../ports/publisher.js";
 import type { OnDelete } from "../../domain/publish-plan.js";
 import { markdownToDocx } from "../../converters/markdown-to-docx.js";
@@ -39,7 +40,7 @@ export class GoogleDrivePublisher implements Publisher {
     return { id: fileId, url };
   }
 
-  async update(ref: DestinationRef, doc: PublishTargetDoc): Promise<void> {
+  async update(ref: DestinationRef, doc: RenderedDoc): Promise<void> {
     const docx = await markdownToDocx(doc.body);
     await updateDoc(this.ctx, ref.id, doc.name, docx);
   }

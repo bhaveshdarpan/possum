@@ -3,8 +3,11 @@ import type { OnDelete } from "../domain/publish-plan.js";
 
 export type DestinationRef = { id: string; url: string };
 
-// The document fields a publisher needs to create or update a mirror.
-export type PublishTargetDoc = Pick<Document, "name" | "body" | "segments">;
+// Rendered content a publisher writes on update: title + body, no placement.
+export type RenderedDoc = Pick<Document, "name" | "body">;
+
+// Everything a publisher needs to create a mirror: content plus folder placement.
+export type PublishTargetDoc = RenderedDoc & Pick<Document, "segments">;
 
 // A destination type (Google Docs today; Notion / PDF later). One implementation
 // per Target type. The app depends only on this interface — never on a concrete
@@ -15,7 +18,7 @@ export interface Publisher {
   readonly capabilities: { folders: boolean; comments: boolean };
 
   create(doc: PublishTargetDoc): Promise<DestinationRef>;
-  update(ref: DestinationRef, doc: PublishTargetDoc): Promise<void>;
+  update(ref: DestinationRef, doc: RenderedDoc): Promise<void>;
   move(ref: DestinationRef, segments: string[]): Promise<void>;
   delete(ref: DestinationRef, mode: OnDelete): Promise<void>;
 

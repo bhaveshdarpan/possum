@@ -6,7 +6,7 @@ import { readIndex, writeIndex } from "./index/io.js";
 import type { IndexFile } from "./index/schema.js";
 import { planSync } from "./orchestrator/plan.js";
 import { runActions } from "./orchestrator/run.js";
-import { createDriveContext } from "./providers/google-drive/auth.js";
+import { createGoogleDrivePublisher } from "./publishers/google-drive/publisher.js";
 
 export async function main(): Promise<void> {
   loadConfig(); // fail fast if GOOGLE_APPLICATION_CREDENTIALS is missing
@@ -66,11 +66,16 @@ export async function main(): Promise<void> {
       continue;
     }
 
-    const ctx = await createDriveContext({
-      rootFolderId: target.driveFolderId,
+    const publisher = await createGoogleDrivePublisher({
+      driveFolderId: target.driveFolderId,
       orgDomain: target.orgDomain,
     });
-    const { next, failed } = await runActions(ctx, index, actions, writeLedger);
+    const { next, failed } = await runActions(
+      publisher,
+      index,
+      actions,
+      writeLedger,
+    );
     index = next;
     totalFailed += failed;
     await writeIndex(indexPath, index);
