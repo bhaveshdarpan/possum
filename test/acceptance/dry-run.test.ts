@@ -26,8 +26,8 @@ afterEach(() => {
 const LEDGER_PATH = "ledger.json"; // manifest default, at repo root
 
 function setupRepo(): string {
-  dir = mkdtempSync(path.join(tmpdir(), "docpipe-dryrun-"));
-  writeFileSync(path.join(dir, "docpipe.yaml"), MANIFEST);
+  dir = mkdtempSync(path.join(tmpdir(), "possum-dryrun-"));
+  writeFileSync(path.join(dir, "possum.yaml"), MANIFEST);
   writeFileSync(path.join(dir, LEDGER_PATH), LEDGER);
   mkdirSync(path.join(dir, "docs"));
   writeFileSync(path.join(dir, "docs", "new.md"), "# a new doc");

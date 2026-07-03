@@ -70,7 +70,7 @@ export type Target = z.infer<typeof targetSchema>;
 export function loadManifest(path: string): Manifest {
   if (!existsSync(path)) {
     throw new Error(
-      `Manifest not found at ${path}. Create a docpipe.yaml (see README).`,
+      `Manifest not found at ${path}. Create a possum.yaml (see README).`,
     );
   }
   let raw: unknown;

@@ -1,15 +1,15 @@
-# PR check: runs the docpipe planner in dry-run mode and reports what a merge
-# would create / update / rename / delete. Planning is read-only (local files +
-# ledger + Git), so this needs NO service-account secret — it is safe on PRs,
+# PR check: runs the possum planner in dry-run mode (via the local composite
+# action) and reports what a merge would create / update / rename / delete.
+# Planning is read-only, so this needs NO service-account secret — safe on PRs,
 # including from forks.
 
-name: docpipe dry-run
+name: possum dry-run
 
 on:
   pull_request:
     paths:
       - "docs/**"
-      - "docpipe.yaml"
+      - "possum.yaml"
 
 permissions:
   contents: read
@@ -24,44 +24,25 @@ jobs:
         with:
           fetch-depth: 0 # full history so rename detection can diff lastSyncedSha..HEAD
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: "npm"
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build
-        run: npm run build
-
       # Fails the check if the manifest is invalid (P0-2 fail-fast) or planning
-      # errors — surfacing the problem on the PR before it reaches main.
+      # errors — surfacing the problem on the PR before it reaches main. The
+      # action also writes the plan to the job summary.
       - name: Dry-run (plan only, no writes)
-        run: node dist/cli/cli.js plan | tee plan.txt
-
-      - name: Write job summary
-        if: always()
-        run: |
-          {
-            echo '## docpipe dry-run'
-            echo
-            echo '```'
-            cat plan.txt
-            echo '```'
-          } >> "$GITHUB_STEP_SUMMARY"
+        uses: ./
+        with:
+          command: plan
 
       # Sticky comment (same-repo PRs only; fork tokens are read-only). The job
-      # summary above always renders, so forks still get the plan.
+      # summary the action writes always renders, so forks still get the plan.
       - name: Comment plan on PR
         if: github.event.pull_request.head.repo.full_name == github.repository
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
-            const marker = '<!-- docpipe-dry-run -->';
-            const body = `${marker}\n## docpipe dry-run\n\`\`\`\n${fs.readFileSync('plan.txt', 'utf8')}\n\`\`\``;
+            const marker = '<!-- possum-dry-run -->';
+            const out = fs.readFileSync(`${process.env.RUNNER_TEMP}/possum.out`, 'utf8');
+            const body = `${marker}\n## possum dry-run\n\`\`\`\n${out}\n\`\`\``;
             const { owner, repo } = context.repo;
             const issue_number = context.issue.number;
             const { data: comments } = await github.rest.issues.listComments({ owner, repo, issue_number });

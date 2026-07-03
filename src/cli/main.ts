@@ -21,7 +21,7 @@ export async function main(
   if (!dryRun) loadConfig(); // fail fast if GOOGLE_APPLICATION_CREDENTIALS is missing
   const repoRoot = opts.repoRoot ?? process.cwd();
   const manifest = loadManifest(
-    opts.manifestPath ?? path.join(repoRoot, "docpipe.yaml"),
+    opts.manifestPath ?? path.join(repoRoot, "possum.yaml"),
   );
 
   const ledgerStore = new FileLedgerStore(path.join(repoRoot, manifest.ledger));

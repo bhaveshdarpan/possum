@@ -1,4 +1,4 @@
-# documentation-repository
+# possum
 
 Canonical home for product/technical docs, plus the pluggable pipeline that publishes them.
 
@@ -10,7 +10,7 @@ Docs are written once as Markdown in Git (single source of truth) and **publishe
 
 ```mermaid
 flowchart LR
-  A["Git repos<br/>Markdown + front-matter"] -->|merge triggers CI| B["docpipe<br/>pipeline"]
+  A["Git repos<br/>Markdown + front-matter"] -->|merge triggers CI| B["possum<br/>pipeline"]
   B --> C["Google Docs<br/>comment / review mirror"]
   C -. comments to PRs .-> A
   B -. deferred .-> D[Docusaurus]
@@ -21,7 +21,7 @@ flowchart LR
 ## V1 scope
 
 - **Store:** Markdown in Git, one or many repos.
-- **Pipeline:** config‑driven engine `docpipe`; a repo adopts it with a manifest + shared CI workflow — no repo‑specific code.
+- **Pipeline:** config‑driven engine `possum`; a repo adopts it with a manifest + shared CI workflow — no repo‑specific code.
 - **One publisher:** Google Docs (one‑way mirror).
 
 **Deferred** (designed for, not built): Docusaurus, PDF, AI index, versioning, per‑doc access control.
@@ -36,14 +36,14 @@ flowchart LR
 - **Edit the Markdown, not the Doc.** The Doc is a read-only published mirror (org gets commenter access on creation). Direct edits will be overwritten on the next sync.
 - **Document URLs are stable.** Edits update the existing Doc in place, so external links keep working.
 
-## Adopt in 3 steps
+## Adopt in your repo
 
-1. Add `docpipe.yaml` (below).
-2. Call the shared CI workflow on merge to the default branch.
-3. Add `publish:` front‑matter to docs you want mirrored.
+No engine code to install — the shared CI workflow builds and runs it for you. Three steps:
+
+**1. Add `possum.yaml`** at your repo root:
 
 ```yaml
-# docpipe.yaml
+# possum.yaml
 version: 1
 source: { type: git, docsDir: docs }
 targets:
@@ -57,7 +57,26 @@ defaults: { onUnchanged: skip, publish: [google-docs] }
 ledger: ledger.json # optional; where the sync ledger lives (default shown)
 ```
 
-**`docpipe.yaml` is yours to edit; `ledger.json` is the machine's.** The ledger is the pipeline's memory of what's already published — like `package-lock.json` to `package.json`. CI commits it back after each run; you commit it, but never hand-edit it. It defaults to `ledger.json` beside the manifest; point `ledger:` elsewhere (e.g. `state/ledger.json`) if you prefer — nested paths are created for you.
+**2. Add the caller workflow** — copy [`examples/possum-adopter.yml`](examples/possum-adopter.yml) to `.github/workflows/docs.yml`. It calls the shared reusable workflow (~15 lines, no engine code):
+
+```yaml
+jobs:
+  possum:
+    permissions: { contents: write, pull-requests: write }
+    uses: bhaveshdarpan/possum/.github/workflows/publish.yml@main
+    with:
+      command: ${{ github.event_name == 'pull_request' && 'plan' || 'push' }}
+    secrets:
+      google-credentials-json: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+```
+
+**3. Add the secret** — `GOOGLE_SERVICE_ACCOUNT_JSON` (the key file's full contents) under Settings → Secrets and variables → Actions. See [Setup](#setup) for creating the service account and sharing the Drive folder.
+
+Then add `publish:` front‑matter to the docs you want mirrored (below). On a PR you get a read‑only plan comment; on merge to `main` it publishes and commits the ledger back.
+
+> **Prefer more control?** Skip the reusable workflow and use the composite action directly (`uses: bhaveshdarpan/possum@main` with `command` / `manifest` / `google-credentials-json` inputs), writing your own commit/comment steps. The engine currently lives in this repo; pin `@main` now and switch to a release tag once one is cut.
+
+**`possum.yaml` is yours to edit; `ledger.json` is the machine's.** The ledger is the pipeline's memory of what's already published — like `package-lock.json` to `package.json`. CI commits it back after each run; you commit it, but never hand-edit it. It defaults to `ledger.json` beside the manifest; point `ledger:` elsewhere (e.g. `state/ledger.json`) if you prefer — nested paths are created for you.
 
 ```yaml
 # per-document front-matter
@@ -77,12 +96,12 @@ The Doc name in Drive is taken from `title` if present, otherwise from the filen
 2. Create or edit a file under `docs/` (e.g. `docs/payments/overview.md`).
 3. Open a PR. Review on the Markdown diff.
 4. Merge.
-5. Publish — either automatically on merge (CI) or manually with `docpipe push`.
+5. Publish — either automatically on merge (CI) or manually with `possum push`.
 
 ## Run modes
 
-- **Dry‑run (PR check):** `docpipe plan` — print the create/update/rename/delete/skip plan without writing anything. Needs **no** service‑account key (planning is read‑only). `.github/workflows/dry-run.yml` runs it on every PR touching `docs/**`, posts the plan as a job summary + sticky PR comment, and fails on an invalid manifest.
-- **Manual:** `docpipe push` — sync `docs/**` to Drive on demand. After a successful run, commit the updated `ledger.json` ledger.
+- **Dry‑run (PR check):** `possum plan` — print the create/update/rename/delete/skip plan without writing anything. Needs **no** service‑account key (planning is read‑only). `.github/workflows/dry-run.yml` runs it on every PR touching `docs/**`, posts the plan as a job summary + sticky PR comment, and fails on an invalid manifest.
+- **Manual:** `possum push` — sync `docs/**` to Drive on demand. After a successful run, commit the updated `ledger.json` ledger.
 - **On merge:** `.github/workflows/sync.yml` runs on push to `main` under `docs/**`, then commits the updated `ledger.json` ledger back with `[skip ci]`.
 
 Config lives in the committed manifest; the **service‑account key stays a secret** (env / CI secret), never in the manifest.
@@ -139,7 +158,7 @@ The service-account key is the only **secret** — it lives in `.env`:
 GOOGLE_APPLICATION_CREDENTIALS=/absolute/path/to/service-account.json
 ```
 
-Everything else is **structural config** and lives in the committed `docpipe.yaml` (ADR-0003). Set the Drive folder ID from step 3 and your Workspace domain on the `google-docs` target:
+Everything else is **structural config** and lives in the committed `possum.yaml` (ADR-0003). Set the Drive folder ID from step 3 and your Workspace domain on the `google-docs` target:
 
 ```yaml
 targets:
@@ -178,17 +197,17 @@ You should see a `created` line with the Doc URL, the Doc should appear in Drive
 
 ## Running
 
-The engine ships a `docpipe` CLI. Build once, then run the bin:
+The engine ships a `possum` CLI. Build once, then run the bin:
 
 ```bash
-npm run build                # emit dist/ and the `docpipe` bin
+npm run build                # emit dist/ and the `possum` bin
 node dist/cli/cli.js plan    # dry-run — read-only, no credentials
 node dist/cli/cli.js push    # publish — needs GOOGLE_APPLICATION_CREDENTIALS
-node dist/cli/cli.js push --manifest path/to/docpipe.yaml
+node dist/cli/cli.js push --manifest path/to/possum.yaml
 node dist/cli/cli.js --help | --version
 ```
 
-Installed as a package the bin is on `PATH`, so the same commands are `docpipe plan`, `docpipe push`, etc. Development checks:
+Installed as a package the bin is on `PATH`, so the same commands are `possum plan`, `possum push`, etc. Development checks:
 
 ```bash
 npm run typecheck  # tsc --noEmit
@@ -216,12 +235,12 @@ src/
     file-ledger-store.ts       # read / write ledger.json (implements LedgerStore)
     ledger-schema.ts           # zod schema for the ledger
   config.ts                    # env secrets (service-account key)
-  config/manifest.ts           # docpipe.yaml schema + fail-fast loader
+  config/manifest.ts           # possum.yaml schema + fail-fast loader
   cli/
     main.ts                    # composition root — wires publishers to the core
-    cli.ts                     # `docpipe` bin — arg parsing, report rendering, exit codes
+    cli.ts                     # `possum` bin — arg parsing, report rendering, exit codes
   index.ts                     # public API barrel (programmatic use)
-docpipe.yaml                   # committed manifest (source, targets, defaults)
+possum.yaml                   # committed manifest (source, targets, defaults)
 ledger.json                    # ledger: path → provider → { fileId, url, hash }; + lastSyncedSha
 dist/                          # build output (the published package; gitignored)
 ```

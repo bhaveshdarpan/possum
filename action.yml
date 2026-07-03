@@ -1,0 +1,70 @@
+# Composite action: build the possum engine and run it against the calling
+# repo's checkout. Works both as a local action (`uses: ./`, for this repo) and
+# from another repo (`uses: bhaveshdarpan/possum@<ref>`).
+#
+# It does NOT commit the ledger or comment on PRs — those are workflow concerns
+# (see .github/workflows/publish.yml, which wraps this action).
+name: possum
+description: Publish Markdown docs from Git to Google Docs (one-way mirror).
+
+inputs:
+  command:
+    description: "push (write to Drive) or plan (read-only dry-run)"
+    required: false
+    default: push
+  manifest:
+    description: "Path to possum.yaml, relative to the repo root"
+    required: false
+    default: possum.yaml
+  google-credentials-json:
+    description: "Service-account key JSON contents. Required for push; unused for plan."
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version: "22"
+
+    # Build the engine from this action's own checkout (its deps + dist live
+    # under github.action_path, isolated from the caller's workspace).
+    - name: Build possum
+      shell: bash
+      working-directory: ${{ github.action_path }}
+      run: npm ci && npm run build
+
+    - name: Write service-account key
+      if: ${{ inputs.command == 'push' }}
+      shell: bash
+      env:
+        SA_JSON: ${{ inputs.google-credentials-json }}
+      run: |
+        mkdir -p "$RUNNER_TEMP/possum-sa"
+        printf '%s' "$SA_JSON" > "$RUNNER_TEMP/possum-sa/key.json"
+        chmod 600 "$RUNNER_TEMP/possum-sa/key.json"
+
+    # Runs with cwd = the caller's workspace, so the CLI reads their
+    # possum.yaml / docs/ / ledger. Node resolves the engine's deps from
+    # github.action_path regardless of cwd.
+    - name: Run possum ${{ inputs.command }}
+      shell: bash
+      env:
+        GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/possum-sa/key.json
+      run: |
+        node "${{ github.action_path }}/dist/cli/cli.js" \
+          "${{ inputs.command }}" --manifest "${{ inputs.manifest }}" \
+          | tee "$RUNNER_TEMP/possum.out"
+
+    - name: Job summary
+      if: ${{ always() }}
+      shell: bash
+      run: |
+        {
+          echo "## possum — ${{ inputs.command }}"
+          echo
+          echo '```'
+          cat "$RUNNER_TEMP/possum.out" 2>/dev/null || echo "(no output)"
+          echo '```'
+        } >> "$GITHUB_STEP_SUMMARY"

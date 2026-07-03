@@ -68,14 +68,14 @@ function renderReport(report: RunReport): void {
   }
 }
 
-const USAGE = `docpipe — publish Markdown docs from Git to configured targets
+const USAGE = `possum — publish Markdown docs from Git to configured targets
 
 Usage:
-  docpipe push [options]     Publish docs to their targets (updates the ledger)
-  docpipe plan [options]     Show what push would do; write nothing (alias: push --dry-run)
+  possum push [options]     Publish docs to their targets (updates the ledger)
+  possum plan [options]     Show what push would do; write nothing (alias: push --dry-run)
 
 Options:
-  --manifest <path>          Path to docpipe.yaml (default: ./docpipe.yaml)
+  --manifest <path>          Path to possum.yaml (default: ./possum.yaml)
   --dry-run                  Plan only; make no changes (implied by 'plan')
   -v, --version              Print version and exit
   -h, --help                 Show this help

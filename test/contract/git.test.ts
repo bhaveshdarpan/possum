@@ -18,7 +18,7 @@ function git(cwd: string, ...args: string[]): string {
 }
 
 function initRepo(): string {
-  dir = mkdtempSync(path.join(tmpdir(), "docpipe-git-"));
+  dir = mkdtempSync(path.join(tmpdir(), "possum-git-"));
   git(dir, "init", "-q");
   git(dir, "config", "user.email", "t@t.co");
   git(dir, "config", "user.name", "t");
@@ -53,7 +53,7 @@ describe("git rename detection (P0-8)", () => {
   });
 
   it("returns null head outside a Git repo (tolerant fallback)", () => {
-    const d = mkdtempSync(path.join(tmpdir(), "docpipe-nogit-"));
+    const d = mkdtempSync(path.join(tmpdir(), "possum-nogit-"));
     try {
       expect(currentHead(d)).toBeNull();
     } finally {

@@ -26,7 +26,7 @@ export function tmpRepo(files: Record<string, string>): {
   docsRoot: string;
   cleanup: () => void;
 } {
-  const root = mkdtempSync(path.join(tmpdir(), "docpipe-"));
+  const root = mkdtempSync(path.join(tmpdir(), "possum-"));
   for (const [rel, content] of Object.entries(files)) {
     const full = path.join(root, "docs", rel);
     mkdirSync(path.dirname(full), { recursive: true });

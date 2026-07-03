@@ -1,4 +1,4 @@
-# docpipe manifest — non-secret, structural config (ADR-0003).
+# possum manifest — non-secret, structural config (ADR-0003).
 # The service-account key stays in env / CI secret, never here.
 version: 1
 

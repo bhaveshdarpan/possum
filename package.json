@@ -1,10 +1,28 @@
 {
-  "name": "@zenskar/docpipe",
+  "name": "@bhaveshdarpan/possum",
   "version": "0.1.0",
   "type": "module",
   "description": "Config-driven pipeline that publishes Markdown docs from Git to Google Docs (one-way mirror). Adopt in any repo with a manifest + shared CI.",
+  "keywords": [
+    "documentation",
+    "markdown",
+    "google-docs",
+    "google-drive",
+    "publish",
+    "docs-as-code",
+    "cli"
+  ],
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/bhaveshdarpan/possum#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bhaveshdarpan/possum.git"
+  },
+  "bugs": {
+    "url": "https://github.com/bhaveshdarpan/possum/issues"
+  },
   "bin": {
-    "docpipe": "dist/cli/cli.js"
+    "possum": "dist/cli/cli.js"
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -17,6 +35,9 @@
   "files": [
     "dist"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.build.json && chmod +x dist/cli/cli.js",
     "typecheck": "tsc --noEmit",

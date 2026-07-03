@@ -8,9 +8,9 @@ import { loadManifest } from "../../src/config/manifest.js";
 
 const dirs: string[] = [];
 function writeManifest(yaml: string): string {
-  const dir = mkdtempSync(path.join(tmpdir(), "docpipe-manifest-"));
+  const dir = mkdtempSync(path.join(tmpdir(), "possum-manifest-"));
   dirs.push(dir);
-  const file = path.join(dir, "docpipe.yaml");
+  const file = path.join(dir, "possum.yaml");
   writeFileSync(file, yaml);
   return file;
 }
@@ -96,6 +96,6 @@ defaults: { publish: [notion] }
   });
 
   it("throws a helpful error when the file is absent", () => {
-    expect(() => loadManifest("/no/such/docpipe.yaml")).toThrow(/not found/);
+    expect(() => loadManifest("/no/such/possum.yaml")).toThrow(/not found/);
   });
 });

@@ -1,14 +1,14 @@
-# Syncs docs/**/*.md to Google Drive after a push/merge to main.
+# Syncs docs/**/*.md to Google Drive after a push/merge to main, via the local
+# possum composite action (dogfoods action.yml).
 #
 # Required repository secret (Settings → Secrets and variables → Actions):
 #   GOOGLE_SERVICE_ACCOUNT_JSON  full contents of the service-account key file
 #
 # Structural config (driveFolderId, orgDomain) lives in the committed
-# docpipe.yaml manifest — not here (ADR-0003).
+# possum.yaml manifest — not here (ADR-0003).
 #
-# Trigger filter is path-scoped to docs/**, so the ledger commit this job
-# pushes back does not re-trigger the workflow (it only touches
-# ledger.json).
+# Trigger filter is path-scoped to docs/**, so the ledger commit this job pushes
+# back does not re-trigger the workflow (it only touches ledger.json).
 
 name: Sync docs to Drive
 
@@ -33,41 +33,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 0 # full history so rename detection can diff lastSyncedSha..HEAD
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Publish to Drive
+        uses: ./
         with:
-          node-version: "22"
-          cache: "npm"
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build
-        run: npm run build
-
-      - name: Write service account key
-        env:
-          SA_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
-        run: |
-          mkdir -p "$RUNNER_TEMP/sa"
-          printf '%s' "$SA_JSON" > "$RUNNER_TEMP/sa/key.json"
-          chmod 600 "$RUNNER_TEMP/sa/key.json"
-
-      - name: Run sync
-        env:
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/sa/key.json
-        run: node dist/cli/cli.js push
+          command: push
+          google-credentials-json: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
 
       - name: Commit updated ledger
         run: |
-          if [[ -z "$(git status --porcelain ledger.json)" ]]; then
+          git add -A
+          if git diff --cached --quiet; then
             echo "No ledger changes to commit."
-            exit 0
+          else
+            git config user.name  "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -m "chore(docs): sync ledger [skip ci]"
+            git push
           fi
-          git config user.name  "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add ledger.json
-          git commit -m "chore(docs): sync ledger [skip ci]"
-          git push

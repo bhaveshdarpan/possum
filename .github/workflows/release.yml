@@ -1,0 +1,48 @@
+# Publishes @bhaveshdarpan/possum to npm when a v* tag is pushed.
+#
+# Setup (one-time):
+#   - Create an automation token at npmjs.com (Access Tokens → Generate → Automation).
+#   - Add it as the repository secret NPM_TOKEN.
+#
+# Release: bump "version" in package.json, commit, then:
+#   git tag v0.1.0 && git push origin v0.1.0
+
+name: release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Verify tag matches package.json version
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          PKG="$(node -p "require('./package.json').version")"
+          if [[ "$TAG" != "$PKG" ]]; then
+            echo "Tag v$TAG does not match package.json version $PKG"; exit 1
+          fi
+
+      - name: Install
+        run: npm ci
+
+      - name: Build + test
+        run: npm run build && npm test
+
+      - name: Publish
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

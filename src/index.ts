@@ -1,7 +1,7 @@
-// Public API for programmatic use. The CLI (bin: docpipe) is the primary entry;
+// Public API for programmatic use. The CLI (bin: possum) is the primary entry;
 // this barrel lets other tooling embed the engine or compose a custom run.
 //
-// - `main` is the Google-Drive composition root (reads docpipe.yaml, wires the
+// - `main` is the Google-Drive composition root (reads possum.yaml, wires the
 //   Drive publisher) — the same thing the CLI runs.
 // - `runPipeline` is the pure orchestrator: inject your own Publisher(s) and
 //   LedgerStore to publish to a different surface without the CLI.

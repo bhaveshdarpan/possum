@@ -4,16 +4,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-`docpipe` — a config-driven pipeline that publishes Markdown docs from Git one-way to Google Docs (a review/comment mirror). A repo adopts it with a `docpipe.yaml` manifest + shared CI — **no repo-specific code**. Markdown in Git is canonical; the Google Doc is a non-authoritative mirror that gets overwritten on the next sync.
+`possum` — a config-driven pipeline that publishes Markdown docs from Git one-way to Google Docs (a review/comment mirror). A repo adopts it with a `possum.yaml` manifest + shared CI — **no repo-specific code**. Markdown in Git is canonical; the Google Doc is a non-authoritative mirror that gets overwritten on the next sync.
 
-The engine is packaged as `@zenskar/docpipe` with a `docpipe` CLI (`bin` → `dist/cli/cli.js`).
+The engine is packaged as `@bhaveshdarpan/possum` with a `possum` CLI (`bin` → `dist/cli/cli.js`).
 
 ## Commands
 
 ```bash
 npm run build         # tsc → dist/ (+ chmod the bin); the published artifact
-node dist/cli/cli.js plan   # docpipe plan — read-only, no writes, no credentials
-node dist/cli/cli.js push   # docpipe push — publish (needs GOOGLE_APPLICATION_CREDENTIALS)
+node dist/cli/cli.js plan   # possum plan — read-only, no writes, no credentials
+node dist/cli/cli.js push   # possum push — publish (needs GOOGLE_APPLICATION_CREDENTIALS)
 npm run typecheck     # tsc --noEmit (source uses NodeNext + strict + exactOptionalPropertyTypes)
 npm run lint:boundaries  # enforces the hexagonal import rule (see below) — runs in CI
 npm test              # vitest run (48 tests)
@@ -21,7 +21,7 @@ npm run coverage      # vitest + v8 coverage gate (core ≥90% stmts/lines/funcs
 npm run format        # prettier over docs/**/*.md + README.md
 ```
 
-Run the engine via the built bin (`node dist/cli/cli.js …`, or `docpipe …` once installed); it loads a local `.env` if present. There is no `tsx` run script — CI builds and runs `dist/`. Run a single test file or case:
+Run the engine via the built bin (`node dist/cli/cli.js …`, or `possum …` once installed); it loads a local `.env` if present. There is no `tsx` run script — CI builds and runs `dist/`. Run a single test file or case:
 
 ```bash
 npx vitest run test/unit/manifest.test.ts
@@ -40,7 +40,7 @@ src/
   app/          plan.ts (decide) + run.ts (execute one plan) + pipeline.ts (orchestrate targets → RunReport); imports only domain + ports
   publishers/   google-drive/ — GoogleDrivePublisher implements Publisher (owns docx render, folders, files, permissions)
   adapters/     git.ts (rename detection), file-ledger-store.ts + ledger-io/-schema (LedgerStore over ledger.json)
-  config/       manifest.ts — docpipe.yaml zod schema + fail-fast loader
+  config/       manifest.ts — possum.yaml zod schema + fail-fast loader
   config.ts     env secrets only (GOOGLE_APPLICATION_CREDENTIALS)
   cli/          main.ts (composition root — wires publishers to the core) + cli.ts (the bin)
   index.ts      public API barrel
@@ -61,13 +61,17 @@ src/
 - **Ledger key stability.** Publications are keyed by `providerId` (`"google-drive"`, from `GOOGLE_DRIVE_PROVIDER_ID`). The manifest target _name_ (`google-docs`) is for routing only. Re-keying the ledger orphans every existing mirror. The on-disk shape is wire-compatible with the old PoC `_index.json`.
 - **Partial-failure isolation (P0-6).** `run.ts` wraps each action in its own try/catch, persists the ledger immediately after each success, and on create persists **before** `afterRecord` (the commenter grant) — so a grant failure can never leave a created-but-unrecorded Doc that a re-run would duplicate. One failure never blocks the rest; the run exits non-zero if any failed.
 - **Stable destination URLs.** Update/rename reuse the existing `fileId` (never re-create), so Doc URLs survive edits and moves.
-- **Config vs secret split (ADR-0003).** Structural config (`driveFolderId`, `orgDomain`, targets, `ledger` path) lives in the committed `docpipe.yaml`; only the service-account key is a secret (`.env` / CI secret). Never put the key in the manifest.
+- **Config vs secret split (ADR-0003).** Structural config (`driveFolderId`, `orgDomain`, targets, `ledger` path) lives in the committed `possum.yaml`; only the service-account key is a secret (`.env` / CI secret). Never put the key in the manifest.
 - **`ledger.json`** is machine-managed (like a lockfile): committed, never hand-edited. Its path is the manifest `ledger:` field (default repo root).
 
 ### Run modes
 
 - **plan / dry-run** — read-only (files + ledger + Git), needs no credentials. Used as the PR check (`.github/workflows/dry-run.yml`).
 - **push** — writes to Drive, commits the updated ledger back. On merge via `.github/workflows/sync.yml` (`fetch-depth: 0` is required so Git rename detection can diff `lastSyncedSha..HEAD`).
+
+### Reuse in other repos (CI)
+
+`action.yml` is a composite GitHub Action that builds the engine from its own checkout and runs the CLI against the caller's workspace (needs no published package). `.github/workflows/publish.yml` (`workflow_call`) wraps it with checkout + ledger commit-back + PR comment, so an adopter's caller is ~15 lines (see `examples/possum-adopter.yml`). This repo's own `sync.yml`/`dry-run.yml` dogfood the action via `uses: ./`. When changing the run/commit/comment flow, keep the action (run) and the workflow (lifecycle) concerns separate. The action ref in `publish.yml` is pinned to `@main` — bump it when a release tag is cut.
 
 ## Conventions
 

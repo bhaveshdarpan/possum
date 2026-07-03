@@ -1,0 +1,30 @@
+# Adopt possum in your repo.
+#
+# 1. Copy this file to .github/workflows/docs.yml in your repository.
+# 2. Add a possum.yaml manifest at the repo root (see the README).
+# 3. Add a repository secret GOOGLE_SERVICE_ACCOUNT_JSON = the service-account
+#    key file's full contents (Settings → Secrets and variables → Actions).
+#
+# That's it — no engine code to install. On a PR it posts a read-only plan; on
+# merge to main it publishes and commits the ledger back.
+
+name: Publish docs
+
+on:
+  push:
+    branches: [main]
+    paths: ["docs/**"]
+  pull_request:
+    paths: ["docs/**"]
+
+jobs:
+  possum:
+    permissions:
+      contents: write # commit the ledger back
+      pull-requests: write # post the dry-run plan comment
+    # Pin to a release tag once one exists (e.g. @v1).
+    uses: bhaveshdarpan/possum/.github/workflows/publish.yml@main
+    with:
+      command: ${{ github.event_name == 'pull_request' && 'plan' || 'push' }}
+    secrets:
+      google-credentials-json: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
