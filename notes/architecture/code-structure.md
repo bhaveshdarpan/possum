@@ -39,57 +39,58 @@ outside itself.
 ```text
 src/
   domain/       Document, Publication, Ledger, Target — business objects + pure rules
-  interfaces/   Publisher, LedgerStore, Source — what a provider must implement
-  engine/       plan(), run() — orchestration; imports only domain + interfaces
-  providers/
+  ports/        Publisher, LedgerStore — what a provider must implement
+  app/          plan(), run() — orchestration; imports only domain + ports
+  publishers/
     google-drive/   publishing provider (implements Publisher; owns docx rendering)
     notion/         (future) publishing provider
-    file-ledger/    storage provider (implements LedgerStore)
-    git/            source provider (implements Source)
+  adapters/     FileLedgerStore, git rename detection, ledger read/write + schema
   cli/          entrypoint — wires the providers to the core
 ```
 
+> Names follow [ADR-0006](adr/ADR-0006-ddd-ports-and-naming.md): `ports/` (not
+> `interfaces/`), `app/` (not `engine/`), `publishers/` + `adapters/` (not `providers/`).
+
 ## The one rule
 
-`domain/`, `interfaces/`, and `engine/` are the **core**. **Nothing in the core imports
-from `providers/`.** Providers import the core to implement its interfaces; `cli/` is the
-only place that knows which providers exist and wires them together. Enforce it with a
-lint / boundary check so it can't rot over time.
+`domain/`, `ports/`, and `app/` are the **core**. **Nothing in the core imports from
+`publishers/` or `adapters/`.** Providers import the core to implement its ports; `cli/`
+is the only place that knows which providers exist and wires them together. This is
+enforced by `scripts/check-boundaries.ts` (`npm run lint:boundaries`), run in the
+pre-commit hook and in CI, so it can't rot over time.
 
 ## Where each domain object lives
 
-| Object                                                       | Lives in                                   |
-| ------------------------------------------------------------ | ------------------------------------------ |
-| `Document`, `Publication`, `Ledger`, `Target`, `PublishPlan` | `domain/`                                  |
-| `Publisher`, `LedgerStore`, `Source` (the interfaces)        | `interfaces/`                              |
-| `plan()`, `run()`                                            | `engine/`                                  |
-| `GoogleDrivePublisher`, `NotionPublisher`                    | `providers/<name>/`                        |
-| `FileLedgerStore`, `GitSource`                               | `providers/file-ledger/`, `providers/git/` |
+| Object                                                       | Lives in             |
+| ------------------------------------------------------------ | -------------------- |
+| `Document`, `Publication`, `Ledger`, `Target`, `PublishPlan` | `domain/`            |
+| `Publisher`, `LedgerStore` (the ports)                       | `ports/`             |
+| `plan()`, `run()`                                            | `app/`               |
+| `GoogleDrivePublisher`, `NotionPublisher`                    | `publishers/<name>/` |
+| `FileLedgerStore`, git rename detection                      | `adapters/`          |
 
 ## Where to add things
 
 - **A new API-push surface** (Notion, Confluence, SharePoint) → a new folder under
-  `providers/` implementing the `Publisher` interface. No change to the core.
+  `publishers/` implementing the `Publisher` port. No change to the core.
 - **A website (Docusaurus) or PDF** → _not_ a provider. It's a separate build job over
   the same `docs/` — it reads the source and builds, it doesn't publish per document.
 - **A new storage or source backend** → a provider implementing `LedgerStore` / `Source`.
 
-## Current vs target
+## Status: landed
 
-The PoC is layered but not yet organized this way: the orchestrator imports the Google
-Drive functions directly, the ledger is named `Index`, and there is no `interfaces/`
-folder. This doc describes the **target**;
-[ADR-0006](adr/ADR-0006-ddd-ports-and-naming.md) is the refactor that gets there. Rough
-current → target map:
+The [ADR-0006](adr/ADR-0006-ddd-ports-and-naming.md) refactor is complete — the code now
+matches this doc. What moved:
 
-| Current                                      | Target                                                     |
-| -------------------------------------------- | ---------------------------------------------------------- |
-| `orchestrator/plan.ts`, `run.ts`             | `engine/`                                                  |
-| `providers/google-drive/*` (called directly) | `providers/google-drive/` behind the `Publisher` interface |
-| `index/` (`IndexFile`)                       | `domain/` `Ledger` + `providers/file-ledger/`              |
-| `converters/markdown-to-docx`                | inside `providers/google-drive/`                           |
-| `PROVIDER = "google-drive"` constant         | `Target { name, type }`; publisher declares its `type`     |
-| _(none)_                                     | `interfaces/`                                              |
+| Was (PoC)                                    | Now                                                                            |
+| -------------------------------------------- | ------------------------------------------------------------------------------ |
+| `orchestrator/plan.ts`, `run.ts`             | `app/`                                                                         |
+| `providers/google-drive/*` (called directly) | `publishers/google-drive/` behind the `Publisher` port                         |
+| `converters/markdown-to-docx`                | inside `publishers/google-drive/`                                              |
+| `index/` (`IndexFile`, `readIndex`)          | `domain/ledger.ts` (`Ledger`) + `adapters/` (io + zod)                         |
+| `PROVIDER = "google-drive"` constant         | `GOOGLE_DRIVE_PROVIDER_ID` on the publisher; `plan()` takes it as `providerId` |
+| _(none)_                                     | `ports/` (`Publisher`, `LedgerStore`)                                          |
 
-Until the refactor lands, the code won't match this doc — that's expected, and called out
-so no one is surprised to find no `interfaces/` folder yet.
+Not yet done: a `Source` port + `GitSource` adapter (git rename detection currently lives
+as a plain module in `adapters/`), and a second publisher (Notion) to exercise the seam.
+The `_index.json` wire format is unchanged — this was a rename, not a data migration.
