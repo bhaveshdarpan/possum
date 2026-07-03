@@ -1,4 +1,4 @@
-import { main } from "../src/main.js";
+import { main } from "../src/cli/main.js";
 
 try {
   process.loadEnvFile();

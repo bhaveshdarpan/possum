@@ -1,12 +1,15 @@
 import path from "node:path";
-import { loadConfig } from "./config.js";
-import { loadManifest } from "./config/manifest.js";
-import { currentHead, detectRenames } from "./git.js";
-import type { Ledger } from "./domain/ledger.js";
-import { FileLedgerStore } from "./adapters/file-ledger-store.js";
-import { planSync } from "./orchestrator/plan.js";
-import { runActions } from "./orchestrator/run.js";
-import { createGoogleDrivePublisher } from "./publishers/google-drive/publisher.js";
+import { loadConfig } from "../config.js";
+import { loadManifest } from "../config/manifest.js";
+import { currentHead, detectRenames } from "../adapters/git.js";
+import type { Ledger } from "../domain/ledger.js";
+import { FileLedgerStore } from "../adapters/file-ledger-store.js";
+import { planSync } from "../app/plan.js";
+import { runActions } from "../app/run.js";
+import {
+  createGoogleDrivePublisher,
+  GOOGLE_DRIVE_PROVIDER_ID,
+} from "../publishers/google-drive/publisher.js";
 
 export async function main(): Promise<void> {
   loadConfig(); // fail fast if GOOGLE_APPLICATION_CREDENTIALS is missing
@@ -18,13 +21,13 @@ export async function main(): Promise<void> {
   const writeLedger = (ledger: Ledger): Promise<void> =>
     ledgerStore.save(ledger);
 
-  // V1 has one publisher type. Multi-target dispatch (a distinct ledger key per
-  // target) lands with the ADR-0006 ports refactor; until then the ledger key
-  // is the fixed "google-drive" provider, so a single target keeps it stable.
+  // V1 wires one publisher type. Each google-docs target keys its publications
+  // under the same providerId ("google-drive"), so a single target keeps the
+  // ledger unambiguous; multi-target dispatch is a later step.
   const googleTargets = manifest.targets.filter((t) => t.type === "google-docs");
   if (googleTargets.length > 1) {
     throw new Error(
-      "Phase 1 supports a single google-docs target; multi-target dispatch lands with the ADR-0006 refactor.",
+      "V1 supports a single google-docs target; multi-target dispatch is not wired yet.",
     );
   }
 
@@ -48,6 +51,7 @@ export async function main(): Promise<void> {
       repoRoot,
       index,
       targetName: target.name,
+      providerId: GOOGLE_DRIVE_PROVIDER_ID,
       defaultPublish: manifest.defaults.publish,
       onDelete: manifest.defaults.onDelete,
       renames,
