@@ -5,6 +5,32 @@ import type {
   RenderedDoc,
 } from "../../src/ports/publisher.js";
 import type { OnDelete } from "../../src/domain/publish-plan.js";
+import type { LedgerStore } from "../../src/ports/ledger-store.js";
+import type { Ledger } from "../../src/domain/ledger.js";
+
+// In-memory LedgerStore (testing-strategy "InMemoryLedger"): records every save
+// (deep-cloned) so a scenario can assert on persistence without touching disk.
+export class InMemoryLedgerStore implements LedgerStore {
+  readonly saves: Ledger[] = [];
+  private current: Ledger;
+
+  constructor(initial: Ledger) {
+    this.current = structuredClone(initial);
+  }
+
+  async load(): Promise<Ledger> {
+    return structuredClone(this.current);
+  }
+
+  async save(ledger: Ledger): Promise<void> {
+    this.current = structuredClone(ledger);
+    this.saves.push(structuredClone(ledger));
+  }
+
+  get latest(): Ledger {
+    return this.current;
+  }
+}
 
 // Recorded publisher operation, for assertions.
 export type Call =

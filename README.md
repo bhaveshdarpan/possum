@@ -178,14 +178,26 @@ You should see a `create` line printed with a URL, the Doc should appear in Driv
 
 ## Running
 
+The engine ships a `docpipe` CLI. In this repo the npm scripts run it from source via `tsx`:
+
 ```bash
-npm run push       # sync docs/** to Drive
-npm run dry-run    # print the plan only — no writes, no credentials needed
+npm run push       # docpipe push — publish docs/** to Drive
+npm run dry-run    # docpipe plan — print the plan only (no writes, no credentials)
 npm run typecheck  # tsc --noEmit
 npm test           # vitest
 ```
 
-`npm run push` scans `docs/**/*.md`, compares each file's hash against `ledger.json`, and creates/updates the matching Google Doc. Unchanged files are skipped. After a successful run, commit `ledger.json`.
+Built and installed as a package, the same commands are:
+
+```bash
+npm run build                # emit dist/ and the `docpipe` bin
+npx docpipe push             # publish   (needs GOOGLE_APPLICATION_CREDENTIALS)
+npx docpipe plan             # dry-run   (read-only, no credentials)
+npx docpipe push --manifest path/to/docpipe.yaml
+docpipe --help | --version
+```
+
+`push` scans `docs/**/*.md`, compares each file's hash against `ledger.json`, and creates/updates the matching Google Doc. Unchanged files are skipped. After a successful run, commit `ledger.json`.
 
 ## Layout
 
@@ -199,6 +211,7 @@ src/
   app/
     plan.ts                    # walk docs/, hash, route, reconcile (create/update/rename/delete/skip)
     run.ts                     # execute a PublishPlan; per-action ledger bookkeeping
+    pipeline.ts                # orchestrate targets → RunReport (pure; ports only)
   publishers/google-drive/     # GoogleDrivePublisher: docx render, folders, files, permissions
   adapters/
     git.ts                     # HEAD + rename detection
@@ -206,11 +219,13 @@ src/
     ledger-schema.ts           # zod schema for the ledger
   config.ts                    # env secrets (service-account key)
   config/manifest.ts           # docpipe.yaml schema + fail-fast loader
-  cli/main.ts                  # entrypoint — wires publishers to the core
-scripts/
-  push.ts                      # thin wrapper (supports --dry-run)
+  cli/
+    main.ts                    # composition root — wires publishers to the core
+    cli.ts                     # `docpipe` bin — arg parsing, report rendering, exit codes
+  index.ts                     # public API barrel (programmatic use)
 docpipe.yaml                   # committed manifest (source, targets, defaults)
-ledger.json           # ledger: path → provider → { fileId, url, hash }; + lastSyncedSha
+ledger.json                    # ledger: path → provider → { fileId, url, hash }; + lastSyncedSha
+dist/                          # build output (the published package; gitignored)
 ```
 
 ## Docs

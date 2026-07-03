@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach, vi } from "vitest";
+import { describe, it, expect, afterEach } from "vitest";
 import { mkdtempSync, writeFileSync, readFileSync, mkdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -37,22 +37,24 @@ function setupRepo(): string {
 }
 
 describe("dry-run (P1-2)", () => {
-  it("prints the plan, needs no credentials, and writes nothing", async () => {
+  it("plans a create, needs no credentials, and writes nothing", async () => {
     const d = setupRepo();
     const before = readFileSync(path.join(d, LEDGER_PATH), "utf8");
     delete process.env.GOOGLE_APPLICATION_CREDENTIALS; // must not be required
 
-    await expect(main({ dryRun: true })).resolves.toBeUndefined();
+    const report = await main({ dryRun: true });
 
-    // Ledger untouched.
+    // Structured plan: one create for the new doc, target not executed.
+    expect(report.dryRun).toBe(true);
+    expect(report.failed).toBe(0);
+    expect(report.targets).toHaveLength(1);
+    const t = report.targets[0]!;
+    expect(t.executed).toBe(false);
+    expect(t.counts).toEqual({ create: 1 });
+    expect(t.plan[0]).toMatchObject({ kind: "create", sourcePath: "docs/new.md" });
+    expect(report.baselineAdvancedTo).toBeUndefined();
+
+    // Ledger untouched on disk.
     expect(readFileSync(path.join(d, LEDGER_PATH), "utf8")).toBe(before);
-
-    // Plan surfaced (a create for the new doc).
-    const logged = vi
-      .mocked(console.log)
-      .mock.calls.map((c) => String(c[0]))
-      .join("\n");
-    expect(logged).toContain("dry-run plan");
-    expect(logged).toContain("create  docs/new.md");
   });
 });
