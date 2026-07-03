@@ -2,8 +2,8 @@ import path from "node:path";
 import { loadConfig } from "./config.js";
 import { loadManifest } from "./config/manifest.js";
 import { currentHead, detectRenames } from "./git.js";
-import { readIndex, writeIndex } from "./index/io.js";
-import type { IndexFile } from "./index/schema.js";
+import type { Ledger } from "./domain/ledger.js";
+import { FileLedgerStore } from "./adapters/file-ledger-store.js";
 import { planSync } from "./orchestrator/plan.js";
 import { runActions } from "./orchestrator/run.js";
 import { createGoogleDrivePublisher } from "./publishers/google-drive/publisher.js";
@@ -14,9 +14,9 @@ export async function main(): Promise<void> {
   const manifest = loadManifest(path.join(repoRoot, "docpipe.yaml"));
 
   const docsRoot = path.join(repoRoot, manifest.source.docsDir);
-  const indexPath = path.join(repoRoot, "_index.json");
-  const writeLedger = (idx: IndexFile): Promise<void> =>
-    writeIndex(indexPath, idx);
+  const ledgerStore = new FileLedgerStore(path.join(repoRoot, "_index.json"));
+  const writeLedger = (ledger: Ledger): Promise<void> =>
+    ledgerStore.save(ledger);
 
   // V1 has one publisher type. Multi-target dispatch (a distinct ledger key per
   // target) lands with the ADR-0006 ports refactor; until then the ledger key
@@ -28,7 +28,7 @@ export async function main(): Promise<void> {
     );
   }
 
-  let index = await readIndex(indexPath);
+  let index = await ledgerStore.load();
   let totalFailed = 0;
 
   // Rename detection (P0-8): diff the last-synced commit against HEAD. When no
@@ -78,15 +78,15 @@ export async function main(): Promise<void> {
     );
     index = next;
     totalFailed += failed;
-    await writeIndex(indexPath, index);
-    console.log(`[${target.name}] index updated: ${path.relative(repoRoot, indexPath)}`);
+    await ledgerStore.save(index);
+    console.log(`[${target.name}] ledger updated`);
   }
 
   // Advance the rename-detection baseline only on a clean run, so a partial
   // failure re-detects the same renames next time instead of missing them.
   if (totalFailed === 0 && head && index.lastSyncedSha !== head) {
     index.lastSyncedSha = head;
-    await writeIndex(indexPath, index);
+    await ledgerStore.save(index);
     console.log(`ledger baseline advanced to ${head.slice(0, 7)}`);
   }
 
