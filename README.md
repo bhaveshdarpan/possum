@@ -78,6 +78,7 @@ The Doc name in Drive is taken from `title` if present, otherwise from the filen
 
 ## Run modes
 
+- **Dry‑run (PR check):** `npm run dry-run` — print the create/update/rename/delete/skip plan without writing anything. Needs **no** service‑account key (planning is read‑only). `.github/workflows/dry-run.yml` runs it on every PR touching `docs/**`, posts the plan as a job summary + sticky PR comment, and fails on an invalid manifest.
 - **Manual:** `npm run push` — sync `docs/**` to Drive on demand. After a successful run, commit the updated `_index.json` ledger.
 - **On merge:** `.github/workflows/sync.yml` runs on push to `main` under `docs/**`, then commits the updated `_index.json` ledger back with `[skip ci]`.
 
@@ -176,6 +177,7 @@ You should see a `create` line printed with a URL, the Doc should appear in Driv
 
 ```bash
 npm run push       # sync docs/** to Drive
+npm run dry-run    # print the plan only — no writes, no credentials needed
 npm run typecheck  # tsc --noEmit
 npm test           # vitest
 ```
@@ -184,27 +186,28 @@ npm test           # vitest
 
 ## Layout
 
+Hexagonal layout (ADR-0006): the core (`domain`, `ports`, `app`) depends on nothing outside itself; adapters point inward; `cli` is the only composition root.
+
 ```text
 docs/                          # source of truth (Markdown)
 src/
-  config.ts                    # env validation
-  main.ts                      # entrypoint
-  orchestrator/
-    plan.ts                    # walk docs/, hash, diff against index
-    run.ts                     # execute create/update actions
-  converters/
-    markdown-to-docx.ts        # @mohtasham/md-to-docx (pure JS)
-  providers/google-drive/
-    auth.ts                    # service account → Drive client + run context
-    folders.ts                 # ensure-folder-path with per-run cache
-    files.ts                   # create / update Google Doc from .docx upload
-    permissions.ts             # grant domain commenter
-  index/
-    schema.ts                  # zod schema for _index.json
-    io.ts                      # read / write _index.json
+  domain/                      # Document, Ledger, Target, PublishPlan — types + pure rules
+  ports/                       # Publisher, LedgerStore — interfaces adapters implement
+  app/
+    plan.ts                    # walk docs/, hash, route, reconcile (create/update/rename/delete/skip)
+    run.ts                     # execute a PublishPlan; per-action ledger bookkeeping
+  publishers/google-drive/     # GoogleDrivePublisher: docx render, folders, files, permissions
+  adapters/
+    git.ts                     # HEAD + rename detection
+    file-ledger-store.ts       # read / write _index.json (implements LedgerStore)
+    ledger-schema.ts           # zod schema for the ledger
+  config.ts                    # env secrets (service-account key)
+  config/manifest.ts           # docpipe.yaml schema + fail-fast loader
+  cli/main.ts                  # entrypoint — wires publishers to the core
 scripts/
-  push.ts                      # thin wrapper around src/main.ts
-_index.json                    # path → provider → { fileId, url, hash }
+  push.ts                      # thin wrapper (supports --dry-run)
+docpipe.yaml                   # committed manifest (source, targets, defaults)
+_index.json                    # ledger: path → provider → { fileId, url, hash }; + lastSyncedSha
 ```
 
 ## Docs

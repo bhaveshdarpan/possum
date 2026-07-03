@@ -6,6 +6,7 @@
   "description": "Sync Markdown docs from this repo to Google Drive (one-way, push-only). Phase 1 MVP.",
   "scripts": {
     "push": "tsx scripts/push.ts",
+    "dry-run": "tsx scripts/push.ts --dry-run",
     "typecheck": "tsc --noEmit",
     "lint:boundaries": "tsx scripts/check-boundaries.ts",
     "test": "vitest run --passWithNoTests",

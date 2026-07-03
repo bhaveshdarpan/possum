@@ -10,9 +10,29 @@ import {
   createGoogleDrivePublisher,
   GOOGLE_DRIVE_PROVIDER_ID,
 } from "../publishers/google-drive/publisher.js";
+import type { PublishAction } from "../domain/publish-plan.js";
 
-export async function main(): Promise<void> {
-  loadConfig(); // fail fast if GOOGLE_APPLICATION_CREDENTIALS is missing
+// One-line description of a planned action, for the dry-run plan listing.
+function describeAction(a: PublishAction): string | null {
+  switch (a.kind) {
+    case "create":
+      return `  create  ${a.sourcePath}`;
+    case "update":
+      return `  update  ${a.sourcePath}`;
+    case "rename":
+      return `  rename  ${a.fromPath} → ${a.sourcePath}`;
+    case "delete":
+      return `  delete  ${a.sourcePath}  (${a.onDelete})`;
+    case "skip":
+      return null; // omitted from the listing; still counted
+  }
+}
+
+export async function main(opts: { dryRun?: boolean } = {}): Promise<void> {
+  const dryRun = opts.dryRun ?? false;
+  // Planning is read-only (local files + ledger + Git), so the dry-run PR check
+  // needs no service-account key — only real publishing does.
+  if (!dryRun) loadConfig(); // fail fast if GOOGLE_APPLICATION_CREDENTIALS is missing
   const repoRoot = process.cwd();
   const manifest = loadManifest(path.join(repoRoot, "docpipe.yaml"));
 
@@ -60,6 +80,21 @@ export async function main(): Promise<void> {
 
     const counts: Record<string, number> = {};
     for (const a of actions) counts[a.kind] = (counts[a.kind] ?? 0) + 1;
+    const summary = ["create", "update", "rename", "delete", "skip"]
+      .filter((k) => counts[k])
+      .map((k) => `${counts[k]} ${k}`)
+      .join(", ");
+
+    if (dryRun) {
+      // Read-only plan: print what a real run would do; write nothing.
+      console.log(`[${target.name}] dry-run plan — ${summary || "no changes"}`);
+      for (const a of actions) {
+        const line = describeAction(a);
+        if (line) console.log(line);
+      }
+      continue;
+    }
+
     console.log(
       `[${target.name}] planned: ${actions.length} file(s) — ${JSON.stringify(counts)}`,
     );
@@ -85,6 +120,8 @@ export async function main(): Promise<void> {
     await ledgerStore.save(index);
     console.log(`[${target.name}] ledger updated`);
   }
+
+  if (dryRun) return; // nothing was written; skip the ledger baseline + exit code
 
   // Advance the rename-detection baseline only on a clean run, so a partial
   // failure re-detects the same renames next time instead of missing them.

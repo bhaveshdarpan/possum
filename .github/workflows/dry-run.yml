@@ -1,0 +1,70 @@
+# PR check: runs the docpipe planner in dry-run mode and reports what a merge
+# would create / update / rename / delete. Planning is read-only (local files +
+# ledger + Git), so this needs NO service-account secret — it is safe on PRs,
+# including from forks.
+
+name: docpipe dry-run
+
+on:
+  pull_request:
+    paths:
+      - "docs/**"
+      - "docpipe.yaml"
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history so rename detection can diff lastSyncedSha..HEAD
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Fails the check if the manifest is invalid (P0-2 fail-fast) or planning
+      # errors — surfacing the problem on the PR before it reaches main.
+      - name: Dry-run (plan only, no writes)
+        run: npm run --silent dry-run | tee plan.txt
+
+      - name: Write job summary
+        if: always()
+        run: |
+          {
+            echo '## docpipe dry-run'
+            echo
+            echo '```'
+            cat plan.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # Sticky comment (same-repo PRs only; fork tokens are read-only). The job
+      # summary above always renders, so forks still get the plan.
+      - name: Comment plan on PR
+        if: github.event.pull_request.head.repo.full_name == github.repository
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const marker = '<!-- docpipe-dry-run -->';
+            const body = `${marker}\n## docpipe dry-run\n\`\`\`\n${fs.readFileSync('plan.txt', 'utf8')}\n\`\`\``;
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+            const { data: comments } = await github.rest.issues.listComments({ owner, repo, issue_number });
+            const existing = comments.find((c) => c.body?.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number, body });
+            }

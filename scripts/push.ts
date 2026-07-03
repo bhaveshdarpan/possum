@@ -6,7 +6,9 @@ try {
   // no .env file in cwd; rely on the real environment
 }
 
-main().catch((err: unknown) => {
+const dryRun = process.argv.includes("--dry-run");
+
+main({ dryRun }).catch((err: unknown) => {
   console.error(err instanceof Error ? err.message : err);
   process.exit(1);
 });
