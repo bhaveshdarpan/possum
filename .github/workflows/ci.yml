@@ -27,5 +27,5 @@ jobs:
       - name: Boundary check (hexagonal deps)
         run: npm run lint:boundaries
 
-      - name: Test
-        run: npm test
+      - name: Test + core coverage gate
+        run: npm run coverage

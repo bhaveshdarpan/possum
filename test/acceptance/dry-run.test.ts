@@ -1,0 +1,56 @@
+import { describe, it, expect, afterEach, vi } from "vitest";
+import { mkdtempSync, writeFileSync, readFileSync, mkdirSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import { main } from "../../src/cli/main.js";
+
+// Feature: dry_run.feature — plan without writing (P1-2)
+
+const MANIFEST = `
+version: 1
+source: { type: git, docsDir: docs }
+targets:
+  - { name: google-docs, type: google-docs, driveFolderId: "fld", orgDomain: "e.com" }
+defaults: { publish: [google-docs] }
+`;
+const LEDGER = '{\n  "version": 2,\n  "entries": {}\n}\n';
+
+let dir: string | undefined;
+let prevCwd: string | undefined;
+afterEach(() => {
+  if (prevCwd) process.chdir(prevCwd);
+  if (dir) rmSync(dir, { recursive: true, force: true });
+  dir = prevCwd = undefined;
+});
+
+function setupRepo(): string {
+  dir = mkdtempSync(path.join(tmpdir(), "docpipe-dryrun-"));
+  writeFileSync(path.join(dir, "docpipe.yaml"), MANIFEST);
+  writeFileSync(path.join(dir, "_index.json"), LEDGER);
+  mkdirSync(path.join(dir, "docs"));
+  writeFileSync(path.join(dir, "docs", "new.md"), "# a new doc");
+  prevCwd = process.cwd();
+  process.chdir(dir);
+  return dir;
+}
+
+describe("dry-run (P1-2)", () => {
+  it("prints the plan, needs no credentials, and writes nothing", async () => {
+    const d = setupRepo();
+    const before = readFileSync(path.join(d, "_index.json"), "utf8");
+    delete process.env.GOOGLE_APPLICATION_CREDENTIALS; // must not be required
+
+    await expect(main({ dryRun: true })).resolves.toBeUndefined();
+
+    // Ledger untouched.
+    expect(readFileSync(path.join(d, "_index.json"), "utf8")).toBe(before);
+
+    // Plan surfaced (a create for the new doc).
+    const logged = vi
+      .mocked(console.log)
+      .mock.calls.map((c) => String(c[0]))
+      .join("\n");
+    expect(logged).toContain("dry-run plan");
+    expect(logged).toContain("create  docs/new.md");
+  });
+});

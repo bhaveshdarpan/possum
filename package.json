@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit",
     "lint:boundaries": "tsx scripts/check-boundaries.ts",
     "test": "vitest run --passWithNoTests",
+    "coverage": "vitest run --coverage",
     "format": "prettier --write \"docs/**/*.md\" \"README.md\"",
     "format:check": "prettier --check \"docs/**/*.md\" \"README.md\"",
     "prepare": "husky"
@@ -31,6 +32,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.20.0",
+    "@vitest/coverage-v8": "^2.1.9",
     "husky": "^9.1.7",
     "lint-staged": "^17.0.8",
     "prettier": "^3.9.4",
