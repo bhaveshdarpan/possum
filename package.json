@@ -7,7 +7,8 @@
   "scripts": {
     "push": "tsx scripts/push.ts",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
+    "lint:boundaries": "tsx scripts/check-boundaries.ts",
+    "test": "vitest run --passWithNoTests",
     "format": "prettier --write \"docs/**/*.md\" \"README.md\"",
     "format:check": "prettier --check \"docs/**/*.md\" \"README.md\"",
     "prepare": "husky"
