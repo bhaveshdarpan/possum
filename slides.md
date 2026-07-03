@@ -35,7 +35,7 @@ layout: default
 flowchart LR
   A[Edit docs/*.md] --> B[Merge PR to main]
   B --> C[GitHub Action]
-  C --> D{In _index.json?}
+  C --> D{In ledger?}
   D -->|No| E[Convert MD → DOCX]
   E --> F[Create Doc in Drive]
   F --> G[Grant org comment access]

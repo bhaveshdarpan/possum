@@ -40,6 +40,14 @@ describe("loadManifest (P0-2)", () => {
     });
     expect(m.defaults.onDelete).toBe("trash"); // defaulted
     expect(m.defaults.onUnchanged).toBe("skip"); // defaulted
+    expect(m.ledger).toBe("ledger.json"); // defaulted (repo root)
+  });
+
+  it("honors a custom ledger path", () => {
+    const m = loadManifest(
+      writeManifest(VALID.replace("version: 1", "version: 1\nledger: state/sync.json")),
+    );
+    expect(m.ledger).toBe("state/sync.json");
   });
 
   it("applies source + defaults when omitted entirely", () => {

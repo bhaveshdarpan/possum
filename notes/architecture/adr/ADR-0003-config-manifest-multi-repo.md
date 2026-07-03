@@ -49,8 +49,10 @@ manifest for config, env for secrets.**
 
 ### (c) Ledger persistence — V1: commit-back (open sub-decision)
 
-- V1 stores the Sync Ledger at **`.docpipe/state.json` committed back by the CI bot**
-  after each successful run.
+- V1 stores the Sync Ledger at **`ledger.json` (repo root, committed back by the CI
+  bot)** after each successful run. The path is a manifest field (`ledger:`), so
+  adopters can relocate it; it defaults to `ledger.json` next to `docpipe.yaml` —
+  a lockfile-style pairing (edit the manifest, never the ledger).
 - **Open:** move to an external store (object storage / KV) if concurrency or repo count
   makes commit-back painful. Tracked as PRD Open Question #2.
 
@@ -95,6 +97,6 @@ ledger makes explicit.
 
 1. [ ] Publish the shared reusable CI workflow and pin engine versions.
 2. [ ] Define and validate the `docpipe.yaml` schema; fail fast on invalid manifests.
-3. [ ] Implement `FileLedger` with `.docpipe/state.json` and CI concurrency-group
-       serialization.
+3. [ ] Implement `FileLedger` with `ledger.json` (manifest-configurable path) and
+       CI concurrency-group serialization.
 4. [ ] Resolve PRD Open Question #2 (commit-back vs external store) before >~3 repos.

@@ -23,10 +23,12 @@ afterEach(() => {
   dir = prevCwd = undefined;
 });
 
+const LEDGER_PATH = "ledger.json"; // manifest default, at repo root
+
 function setupRepo(): string {
   dir = mkdtempSync(path.join(tmpdir(), "docpipe-dryrun-"));
   writeFileSync(path.join(dir, "docpipe.yaml"), MANIFEST);
-  writeFileSync(path.join(dir, "_index.json"), LEDGER);
+  writeFileSync(path.join(dir, LEDGER_PATH), LEDGER);
   mkdirSync(path.join(dir, "docs"));
   writeFileSync(path.join(dir, "docs", "new.md"), "# a new doc");
   prevCwd = process.cwd();
@@ -37,13 +39,13 @@ function setupRepo(): string {
 describe("dry-run (P1-2)", () => {
   it("prints the plan, needs no credentials, and writes nothing", async () => {
     const d = setupRepo();
-    const before = readFileSync(path.join(d, "_index.json"), "utf8");
+    const before = readFileSync(path.join(d, LEDGER_PATH), "utf8");
     delete process.env.GOOGLE_APPLICATION_CREDENTIALS; // must not be required
 
     await expect(main({ dryRun: true })).resolves.toBeUndefined();
 
     // Ledger untouched.
-    expect(readFileSync(path.join(d, "_index.json"), "utf8")).toBe(before);
+    expect(readFileSync(path.join(d, LEDGER_PATH), "utf8")).toBe(before);
 
     // Plan surfaced (a create for the new doc).
     const logged = vi

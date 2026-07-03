@@ -1,5 +1,6 @@
-import { readFile, writeFile } from "node:fs/promises";
+import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { existsSync } from "node:fs";
+import { dirname } from "node:path";
 import { emptyLedger, type Ledger } from "../domain/ledger.js";
 import { parseLedger } from "./ledger-schema.js";
 
@@ -22,5 +23,6 @@ export async function writeLedger(path: string, ledger: Ledger): Promise<void> {
         .map((k) => [k, ledger.entries[k]!]),
     ),
   };
+  await mkdir(dirname(path), { recursive: true }); // support nested custom ledger paths
   await writeFile(path, JSON.stringify(sorted, null, 2) + "\n", "utf8");
 }

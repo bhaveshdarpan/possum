@@ -6,8 +6,9 @@
 # Structural config (driveFolderId, orgDomain) lives in the committed
 # docpipe.yaml manifest — not here (ADR-0003).
 #
-# Trigger filter is path-scoped to docs/**, so the index commit this job
-# pushes back does not re-trigger the workflow (it only touches _index.json).
+# Trigger filter is path-scoped to docs/**, so the ledger commit this job
+# pushes back does not re-trigger the workflow (it only touches
+# ledger.json).
 
 name: Sync docs to Drive
 
@@ -56,14 +57,14 @@ jobs:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/sa/key.json
         run: npm run push
 
-      - name: Commit updated _index.json
+      - name: Commit updated ledger
         run: |
-          if [[ -z "$(git status --porcelain _index.json)" ]]; then
-            echo "No _index.json changes to commit."
+          if [[ -z "$(git status --porcelain ledger.json)" ]]; then
+            echo "No ledger changes to commit."
             exit 0
           fi
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add _index.json
-          git commit -m "chore(docs): sync _index.json [skip ci]"
+          git add ledger.json
+          git commit -m "chore(docs): sync ledger [skip ci]"
           git push

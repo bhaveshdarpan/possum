@@ -4,7 +4,7 @@ Canonical home for product/technical docs, plus the pluggable pipeline that publ
 
 Docs are written once as Markdown in Git (single source of truth) and **published** one‑way to consumption surfaces. Only review feedback flows back, as pull requests.
 
-> **Status:** V1 in design; specs in [`docs/`](docs/). A working PoC exists locally and is being reconciled with these specs.
+> **Status:** V1 in design; specs in [`notes/`](notes/). A working PoC exists locally and is being reconciled with these specs.
 
 ## Flow (V1)
 
@@ -28,8 +28,8 @@ flowchart LR
 
 ## Approach
 
-- **DDD** — bounded contexts + one ubiquitous language: [domain model](docs/architecture/domain-model.md).
-- **BDD** — behaviour specified in Gherkin, executable: [testing strategy](docs/testing/testing-strategy.md).
+- **DDD** — bounded contexts + one ubiquitous language: [domain model](notes/architecture/domain-model.md).
+- **BDD** — behaviour specified in Gherkin, executable: [testing strategy](notes/testing/testing-strategy.md).
 
 ## Why this exists
 
@@ -54,7 +54,10 @@ targets:
       mode: mirror,
     }
 defaults: { onUnchanged: skip, publish: [google-docs] }
+ledger: ledger.json # optional; where the sync ledger lives (default shown)
 ```
+
+**`docpipe.yaml` is yours to edit; `ledger.json` is the machine's.** The ledger is the pipeline's memory of what's already published — like `package-lock.json` to `package.json`. CI commits it back after each run; you commit it, but never hand-edit it. It defaults to `ledger.json` beside the manifest; point `ledger:` elsewhere (e.g. `state/ledger.json`) if you prefer — nested paths are created for you.
 
 ```yaml
 # per-document front-matter
@@ -71,7 +74,7 @@ The Doc name in Drive is taken from `title` if present, otherwise from the filen
 ## Workflow
 
 1. Branch from `main`.
-2. Create or edit a file under `docs/` (e.g. `docs/product/prd.md`).
+2. Create or edit a file under `docs/` (e.g. `docs/payments/overview.md`).
 3. Open a PR. Review on the Markdown diff.
 4. Merge.
 5. Publish — either automatically on merge (CI) or manually with `npm run push`.
@@ -79,8 +82,8 @@ The Doc name in Drive is taken from `title` if present, otherwise from the filen
 ## Run modes
 
 - **Dry‑run (PR check):** `npm run dry-run` — print the create/update/rename/delete/skip plan without writing anything. Needs **no** service‑account key (planning is read‑only). `.github/workflows/dry-run.yml` runs it on every PR touching `docs/**`, posts the plan as a job summary + sticky PR comment, and fails on an invalid manifest.
-- **Manual:** `npm run push` — sync `docs/**` to Drive on demand. After a successful run, commit the updated `_index.json` ledger.
-- **On merge:** `.github/workflows/sync.yml` runs on push to `main` under `docs/**`, then commits the updated `_index.json` ledger back with `[skip ci]`.
+- **Manual:** `npm run push` — sync `docs/**` to Drive on demand. After a successful run, commit the updated `ledger.json` ledger.
+- **On merge:** `.github/workflows/sync.yml` runs on push to `main` under `docs/**`, then commits the updated `ledger.json` ledger back with `[skip ci]`.
 
 Config lives in the committed manifest; the **service‑account key stays a secret** (env / CI secret), never in the manifest.
 
@@ -167,7 +170,7 @@ EOF
 npm run push
 ```
 
-You should see a `create` line printed with a URL, the Doc should appear in Drive under your root folder, and `_index.json` should gain an entry. Running `npm run push` again should print `skip` for the unchanged file.
+You should see a `create` line printed with a URL, the Doc should appear in Drive under your root folder, and `ledger.json` should gain an entry. Running `npm run push` again should print `skip` for the unchanged file.
 
 ### Personal account testing
 
@@ -182,7 +185,7 @@ npm run typecheck  # tsc --noEmit
 npm test           # vitest
 ```
 
-`npm run push` scans `docs/**/*.md`, compares each file's hash against `_index.json`, and creates/updates the matching Google Doc. Unchanged files are skipped. After a successful run, commit `_index.json`.
+`npm run push` scans `docs/**/*.md`, compares each file's hash against `ledger.json`, and creates/updates the matching Google Doc. Unchanged files are skipped. After a successful run, commit `ledger.json`.
 
 ## Layout
 
@@ -199,7 +202,7 @@ src/
   publishers/google-drive/     # GoogleDrivePublisher: docx render, folders, files, permissions
   adapters/
     git.ts                     # HEAD + rename detection
-    file-ledger-store.ts       # read / write _index.json (implements LedgerStore)
+    file-ledger-store.ts       # read / write ledger.json (implements LedgerStore)
     ledger-schema.ts           # zod schema for the ledger
   config.ts                    # env secrets (service-account key)
   config/manifest.ts           # docpipe.yaml schema + fail-fast loader
@@ -207,9 +210,9 @@ src/
 scripts/
   push.ts                      # thin wrapper (supports --dry-run)
 docpipe.yaml                   # committed manifest (source, targets, defaults)
-_index.json                    # ledger: path → provider → { fileId, url, hash }; + lastSyncedSha
+ledger.json           # ledger: path → provider → { fileId, url, hash }; + lastSyncedSha
 ```
 
 ## Docs
 
-[PRD](docs/product/prd.md) · [Domain model](docs/architecture/domain-model.md) · [System design](docs/architecture/system-design.md) · [ADRs](docs/architecture/adr/) · [Testing strategy](docs/testing/testing-strategy.md)
+[PRD](notes/product/prd.md) · [Domain model](notes/architecture/domain-model.md) · [System design](notes/architecture/system-design.md) · [ADRs](notes/architecture/adr/) · [Testing strategy](notes/testing/testing-strategy.md)

@@ -14,7 +14,7 @@ flowchart TB
   end
   O -->|SourcePort| GS["GitSource"]
   PB -->|PublisherPort| GD["GoogleDocsPublisher"]
-  PB -->|LedgerPort| FL[("FileLedger<br/>.docpipe/state.json")]
+  PB -->|LedgerPort| FL[("FileLedger<br/>ledger.json")]
   GD --> API["Google Docs + Drive API"]
   PB -. PublisherPort .-> DEF["Docusaurus / PDF / AI — deferred"]
 ```
@@ -60,7 +60,7 @@ sequenceDiagram
 - **One‑way:** the publisher only writes Git → Docs; it never reads Doc content back as source.
 - **Dry‑run** prints the full create/update/skip plan without writing — used as a PR check.
 
-## Sync Ledger (`_index.json`)
+## Sync Ledger (`ledger.json`)
 
 Path‑keyed and provider‑scoped: `entries[sourcePath].providers["google-drive"] = { fileId, url, lastSyncedHash }`. Enforces one active mirror per (path, provider). Add a top‑level **`lastSyncedSha`** (the commit synced last run) to enable Git rename detection. V1 commits it back via the CI bot with `[skip ci]` ([ADR-0003](adr/ADR-0003-config-manifest-multi-repo.md)); swap the file store for an external store behind the ledger port when concurrency grows.
 
@@ -73,7 +73,7 @@ Same engine and `plan()`/`run()`, two triggers:
 
 ## Multi-repo adoption
 
-Each repo `uses` the **shared, versioned engine + reusable workflow** and supplies only its own `docpipe.yaml` and its own `_index.json` ledger (config, not code). Non‑secret config (`driveFolderId`, `orgDomain`) lives in the committed manifest; the service‑account key is a CI secret. Adding a repo = one manifest + one secret.
+Each repo `uses` the **shared, versioned engine + reusable workflow** and supplies only its own `docpipe.yaml` and its own `ledger.json` ledger (config, not code). Non‑secret config (`driveFolderId`, `orgDomain`) lives in the committed manifest; the service‑account key is a CI secret. Adding a repo = one manifest + one secret.
 
 ## Reliability — partial-failure isolation
 

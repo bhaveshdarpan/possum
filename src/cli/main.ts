@@ -37,7 +37,9 @@ export async function main(opts: { dryRun?: boolean } = {}): Promise<void> {
   const manifest = loadManifest(path.join(repoRoot, "docpipe.yaml"));
 
   const docsRoot = path.join(repoRoot, manifest.source.docsDir);
-  const ledgerStore = new FileLedgerStore(path.join(repoRoot, "_index.json"));
+  const ledgerStore = new FileLedgerStore(
+    path.join(repoRoot, manifest.ledger),
+  );
   const writeLedger = (ledger: Ledger): Promise<void> =>
     ledgerStore.save(ledger);
 

@@ -24,6 +24,10 @@ const manifestSchema = z
       })
       .default({ type: "git", docsDir: "docs" }),
     targets: z.array(targetSchema).min(1),
+    // Where the machine-managed Sync Ledger lives, relative to the repo root.
+    // Like a lockfile: committed, but never hand-edited. Adopters can relocate
+    // it (e.g. "state/ledger.json"); nested paths are created automatically.
+    ledger: z.string().min(1).default("ledger.json"),
     defaults: z
       .object({
         onUnchanged: z.enum(["skip"]).default("skip"),

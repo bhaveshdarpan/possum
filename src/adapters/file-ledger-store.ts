@@ -2,7 +2,7 @@ import type { Ledger } from "../domain/ledger.js";
 import type { LedgerStore } from "../ports/ledger-store.js";
 import { readLedger, writeLedger } from "./ledger-io.js";
 
-// V1 LedgerStore: a committed JSON file (`_index.json`). Wraps the existing
+// V1 LedgerStore: a committed JSON file (`ledger.json`). Wraps the existing
 // read/write helpers behind the port so the app depends only on `LedgerStore`
 // (ADR-0003). Swap for an external store here as concurrency grows.
 export class FileLedgerStore implements LedgerStore {

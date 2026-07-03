@@ -1,7 +1,8 @@
 // The Sync Ledger — durable record of Publications that makes publishing
 // idempotent (ADR-0006). The domain owns these types; the zod schema in
 // adapters/ledger-schema.ts validates the persisted JSON against them. Same
-// wire shape as the PoC's `_index.json` — no data migration.
+// wire shape as the PoC's `_index.json` — the file was renamed to
+// `ledger.json`, but its JSON shape is unchanged (no data migration).
 
 // One Document's mirror on one provider: destination ref + last published hash.
 export type Publication = {

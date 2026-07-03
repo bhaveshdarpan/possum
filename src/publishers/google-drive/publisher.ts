@@ -12,7 +12,7 @@ import { createDoc, updateDoc, moveDoc, trashDoc } from "./files.js";
 import { grantDomainCommenter } from "./permissions.js";
 
 // Stable ledger key for Google Drive publications. Wire-compatible with the
-// existing `_index.json` (never re-key this — it would orphan every mirror).
+// existing `ledger.json` (never re-key this — it would orphan every mirror).
 export const GOOGLE_DRIVE_PROVIDER_ID = "google-drive";
 
 // Folder that `onDelete: archive` moves mirrors into, under the Drive root.
