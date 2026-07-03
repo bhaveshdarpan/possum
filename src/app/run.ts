@@ -20,7 +20,17 @@ function dropProvider(
   }
 }
 
-export type RunResult = { next: Ledger; failed: number };
+// Outcome of one executed action, for the caller to report. The core returns
+// these instead of writing to stdout — presentation is the CLI's job.
+export type ActionResult = {
+  kind: PublishAction["kind"];
+  sourcePath: string;
+  ok: boolean;
+  url?: string; // create/update/rename destination
+  error?: string; // set when ok === false
+};
+
+export type RunResult = { next: Ledger; failed: number; results: ActionResult[] };
 
 // Persist the ledger after each successful action. Passed in so the caller owns
 // where the ledger lives (file path today; a store later).
@@ -48,14 +58,14 @@ export async function runActions(
     entries: { ...index.entries },
   };
   let failed = 0;
+  const results: ActionResult[] = [];
   for (const action of actions) {
     try {
       switch (action.kind) {
         case "skip":
-          console.log(`skip   ${action.sourcePath}  (${action.reason})`);
+          results.push({ kind: "skip", sourcePath: action.sourcePath, ok: true });
           break;
         case "create": {
-          console.log(`create ${action.sourcePath}`);
           const ref = await publisher.create({
             name: action.name,
             body: action.body,
@@ -71,11 +81,10 @@ export async function runActions(
           // Record BEFORE afterRecord so a grant failure can't orphan the Doc.
           await writeLedger(next);
           await publisher.afterRecord?.(ref);
-          console.log(`       → ${ref.url}`);
+          results.push({ kind: "create", sourcePath: action.sourcePath, ok: true, url: ref.url });
           break;
         }
         case "update": {
-          console.log(`update ${action.sourcePath}`);
           const existing = next.entries[action.sourcePath];
           const prev = existing?.providers[key];
           if (!prev) {
@@ -94,10 +103,10 @@ export async function runActions(
             },
           };
           await writeLedger(next);
+          results.push({ kind: "update", sourcePath: action.sourcePath, ok: true, url: prev.url });
           break;
         }
         case "rename": {
-          console.log(`rename ${action.fromPath} → ${action.sourcePath}`);
           const prev = next.entries[action.fromPath]?.providers[key];
           if (!prev) {
             throw new Error(
@@ -122,12 +131,10 @@ export async function runActions(
           };
           dropProvider(next, action.fromPath, key);
           await writeLedger(next);
+          results.push({ kind: "rename", sourcePath: action.sourcePath, ok: true, url: prev.url });
           break;
         }
         case "delete": {
-          console.log(
-            `delete ${action.sourcePath}  (onDelete: ${action.onDelete})`,
-          );
           const prev = next.entries[action.sourcePath]?.providers[key];
           const ref: DestinationRef = {
             id: action.fileId,
@@ -136,14 +143,19 @@ export async function runActions(
           await publisher.delete(ref, action.onDelete);
           dropProvider(next, action.sourcePath, key);
           await writeLedger(next);
+          results.push({ kind: "delete", sourcePath: action.sourcePath, ok: true });
           break;
         }
       }
     } catch (err) {
       failed++;
-      const msg = err instanceof Error ? err.message : String(err);
-      console.error(`FAILED ${action.sourcePath}: ${msg}`);
+      results.push({
+        kind: action.kind,
+        sourcePath: action.sourcePath,
+        ok: false,
+        error: err instanceof Error ? err.message : String(err),
+      });
     }
   }
-  return { next, failed };
+  return { next, failed, results };
 }

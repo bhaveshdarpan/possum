@@ -1,5 +1,5 @@
 import { planSync } from "./plan.js";
-import { runActions } from "./run.js";
+import { runActions, type ActionResult } from "./run.js";
 import type { Ledger } from "../domain/ledger.js";
 import type { OnDelete, PublishPlan } from "../domain/publish-plan.js";
 import type { Publisher } from "../ports/publisher.js";
@@ -34,6 +34,7 @@ export type TargetOutcome = {
   counts: Record<string, number>;
   failed: number;
   executed: boolean; // false for a dry-run or when there was no work
+  results: ActionResult[]; // per-action outcomes (empty unless executed)
 };
 
 export type RunReport = {
@@ -70,18 +71,25 @@ export async function runPipeline(deps: PipelineDeps): Promise<RunReport> {
 
     const hasWork = plan.some((a) => a.kind !== "skip");
     if (deps.dryRun || !hasWork) {
-      targets.push({ target: target.name, plan, counts, failed: 0, executed: false });
+      targets.push({
+        target: target.name,
+        plan,
+        counts,
+        failed: 0,
+        executed: false,
+        results: [],
+      });
       continue;
     }
 
     const publisher = await target.createPublisher();
-    const { next, failed } = await runActions(publisher, ledger, plan, (l) =>
+    const { next, failed, results } = await runActions(publisher, ledger, plan, (l) =>
       deps.ledgerStore.save(l),
     );
     ledger = next;
     totalFailed += failed;
     await deps.ledgerStore.save(ledger);
-    targets.push({ target: target.name, plan, counts, failed, executed: true });
+    targets.push({ target: target.name, plan, counts, failed, executed: true, results });
   }
 
   const report: RunReport = { dryRun: deps.dryRun, targets, failed: totalFailed };

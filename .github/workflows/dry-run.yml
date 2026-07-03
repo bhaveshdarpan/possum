@@ -33,10 +33,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Build
+        run: npm run build
+
       # Fails the check if the manifest is invalid (P0-2 fail-fast) or planning
       # errors — surfacing the problem on the PR before it reaches main.
       - name: Dry-run (plan only, no writes)
-        run: npm run --silent dry-run | tee plan.txt
+        run: node dist/cli/cli.js plan | tee plan.txt
 
       - name: Write job summary
         if: always()

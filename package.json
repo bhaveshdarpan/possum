@@ -19,9 +19,6 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json && chmod +x dist/cli/cli.js",
-    "docpipe": "tsx src/cli/cli.ts",
-    "push": "tsx src/cli/cli.ts push",
-    "dry-run": "tsx src/cli/cli.ts plan",
     "typecheck": "tsc --noEmit",
     "lint:boundaries": "tsx scripts/check-boundaries.ts",
     "test": "vitest run --passWithNoTests",

@@ -77,12 +77,12 @@ The Doc name in Drive is taken from `title` if present, otherwise from the filen
 2. Create or edit a file under `docs/` (e.g. `docs/payments/overview.md`).
 3. Open a PR. Review on the Markdown diff.
 4. Merge.
-5. Publish — either automatically on merge (CI) or manually with `npm run push`.
+5. Publish — either automatically on merge (CI) or manually with `docpipe push`.
 
 ## Run modes
 
-- **Dry‑run (PR check):** `npm run dry-run` — print the create/update/rename/delete/skip plan without writing anything. Needs **no** service‑account key (planning is read‑only). `.github/workflows/dry-run.yml` runs it on every PR touching `docs/**`, posts the plan as a job summary + sticky PR comment, and fails on an invalid manifest.
-- **Manual:** `npm run push` — sync `docs/**` to Drive on demand. After a successful run, commit the updated `ledger.json` ledger.
+- **Dry‑run (PR check):** `docpipe plan` — print the create/update/rename/delete/skip plan without writing anything. Needs **no** service‑account key (planning is read‑only). `.github/workflows/dry-run.yml` runs it on every PR touching `docs/**`, posts the plan as a job summary + sticky PR comment, and fails on an invalid manifest.
+- **Manual:** `docpipe push` — sync `docs/**` to Drive on demand. After a successful run, commit the updated `ledger.json` ledger.
 - **On merge:** `.github/workflows/sync.yml` runs on push to `main` under `docs/**`, then commits the updated `ledger.json` ledger back with `[skip ci]`.
 
 Config lives in the committed manifest; the **service‑account key stays a secret** (env / CI secret), never in the manifest.
@@ -155,7 +155,7 @@ targets:
 ### 5. Verify the setup
 
 ```bash
-npm run typecheck
+npm run build
 
 mkdir -p docs/prd
 cat > docs/prd/sync-smoke-test.md <<'EOF'
@@ -167,10 +167,10 @@ status: draft
 This file should appear as a Google Doc under the configured root folder.
 EOF
 
-npm run push
+node dist/cli/cli.js push
 ```
 
-You should see a `create` line printed with a URL, the Doc should appear in Drive under your root folder, and `ledger.json` should gain an entry. Running `npm run push` again should print `skip` for the unchanged file.
+You should see a `created` line with the Doc URL, the Doc should appear in Drive under your root folder, and `ledger.json` should gain an entry. Running `push` again should report the file as unchanged (skipped).
 
 ### Personal account testing
 
@@ -178,23 +178,21 @@ You should see a `create` line printed with a URL, the Doc should appear in Driv
 
 ## Running
 
-The engine ships a `docpipe` CLI. In this repo the npm scripts run it from source via `tsx`:
-
-```bash
-npm run push       # docpipe push — publish docs/** to Drive
-npm run dry-run    # docpipe plan — print the plan only (no writes, no credentials)
-npm run typecheck  # tsc --noEmit
-npm test           # vitest
-```
-
-Built and installed as a package, the same commands are:
+The engine ships a `docpipe` CLI. Build once, then run the bin:
 
 ```bash
 npm run build                # emit dist/ and the `docpipe` bin
-npx docpipe push             # publish   (needs GOOGLE_APPLICATION_CREDENTIALS)
-npx docpipe plan             # dry-run   (read-only, no credentials)
-npx docpipe push --manifest path/to/docpipe.yaml
-docpipe --help | --version
+node dist/cli/cli.js plan    # dry-run — read-only, no credentials
+node dist/cli/cli.js push    # publish — needs GOOGLE_APPLICATION_CREDENTIALS
+node dist/cli/cli.js push --manifest path/to/docpipe.yaml
+node dist/cli/cli.js --help | --version
+```
+
+Installed as a package the bin is on `PATH`, so the same commands are `docpipe plan`, `docpipe push`, etc. Development checks:
+
+```bash
+npm run typecheck  # tsc --noEmit
+npm test           # vitest
 ```
 
 `push` scans `docs/**/*.md`, compares each file's hash against `ledger.json`, and creates/updates the matching Google Doc. Unchanged files are skipped. After a successful run, commit `ledger.json`.

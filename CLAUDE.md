@@ -11,9 +11,9 @@ The engine is packaged as `@zenskar/docpipe` with a `docpipe` CLI (`bin` → `di
 ## Commands
 
 ```bash
-npm run push          # docpipe push — publish docs/** to Drive (needs GOOGLE_APPLICATION_CREDENTIALS)
-npm run dry-run       # docpipe plan — read-only plan, no writes, no credentials
 npm run build         # tsc → dist/ (+ chmod the bin); the published artifact
+node dist/cli/cli.js plan   # docpipe plan — read-only, no writes, no credentials
+node dist/cli/cli.js push   # docpipe push — publish (needs GOOGLE_APPLICATION_CREDENTIALS)
 npm run typecheck     # tsc --noEmit (source uses NodeNext + strict + exactOptionalPropertyTypes)
 npm run lint:boundaries  # enforces the hexagonal import rule (see below) — runs in CI
 npm test              # vitest run (48 tests)
@@ -21,15 +21,13 @@ npm run coverage      # vitest + v8 coverage gate (core ≥90% stmts/lines/funcs
 npm run format        # prettier over docs/**/*.md + README.md
 ```
 
-Run a single test file or case:
+Run the engine via the built bin (`node dist/cli/cli.js …`, or `docpipe …` once installed); it loads a local `.env` if present. There is no `tsx` run script — CI builds and runs `dist/`. Run a single test file or case:
 
 ```bash
 npx vitest run test/unit/manifest.test.ts
 npx vitest run -t "skips an unchanged document"
 npx vitest              # watch mode
 ```
-
-The local `push`/`dry-run` scripts run the CLI from source via `tsx`; the built `docpipe` bin runs the same code from `dist/` on plain Node. Both load a local `.env` if present.
 
 ## Architecture — hexagonal (ports & adapters)
 
@@ -56,7 +54,7 @@ src/
 
 - **`app/pipeline.ts`** — the orchestrator: for each target, `planSync()` → (unless dry-run) `runActions()`, persist the ledger, advance the rename baseline on a clean run. Depends only on domain + ports, so it's unit-testable with `FakePublisher` + `InMemoryLedgerStore`.
 - **`app/plan.ts`** decides `create | update | rename | delete | skip` per doc. Pure (fs/git are inputs). Routing (P0-5) filters by `publish` front-matter ∪ `defaults.publish`. Reconcile (P0-8): ledger entries whose path vanished are deletes, unless re-linked to a rename target via Git (`adapters/git.ts`) or a content-hash fallback.
-- **`app/run.ts`** executes one `PublishPlan` via the `Publisher` port and owns ledger bookkeeping + reliability. (It still logs per-action progress directly — a minor known IO impurity.)
+- **`app/run.ts`** executes one `PublishPlan` via the `Publisher` port and owns ledger bookkeeping + reliability. It writes nothing to stdout — it returns `ActionResult[]` (per-doc ok/url/error) for the CLI to render.
 
 ### Non-obvious invariants (do not break)
 

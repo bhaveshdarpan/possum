@@ -4,9 +4,24 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { main } from "./main.js";
 import type { RunReport } from "../app/pipeline.js";
+import type { ActionResult } from "../app/run.js";
 import type { PublishAction } from "../domain/publish-plan.js";
 
 const COUNT_ORDER = ["create", "update", "rename", "delete", "skip"];
+const VERB: Record<string, string> = {
+  create: "created",
+  update: "updated",
+  rename: "renamed",
+  delete: "deleted",
+  skip: "skipped",
+};
+
+// One executed action, for the post-run listing.
+function describeResult(r: ActionResult): string {
+  if (!r.ok) return `  FAILED   ${r.sourcePath} — ${r.error ?? "unknown error"}`;
+  const arrow = r.url ? ` → ${r.url}` : "";
+  return `  ${(VERB[r.kind] ?? r.kind).padEnd(8)} ${r.sourcePath}${arrow}`;
+}
 
 // One-line description of a planned action, for the dry-run plan listing.
 function describeAction(a: PublishAction): string | null {
@@ -42,6 +57,10 @@ function renderReport(report: RunReport): void {
     } else {
       const failed = t.failed > 0 ? `, ${t.failed} failed` : "";
       console.log(`[${t.target}] done — ${summary || "no changes"}${failed}`);
+      for (const r of t.results) {
+        if (r.kind === "skip") continue; // counted, not listed
+        console.log(describeResult(r));
+      }
     }
   }
   if (report.baselineAdvancedTo) {
