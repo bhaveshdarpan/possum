@@ -18,7 +18,6 @@ export type LedgerEntry = {
 
 export type Ledger = {
   version: 2;
-  // Commit synced last run — enables Git rename detection (P0-8).
   lastSyncedSha?: string;
   entries: Record<string, LedgerEntry>;
 };
